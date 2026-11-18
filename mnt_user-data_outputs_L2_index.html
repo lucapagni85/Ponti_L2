@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ispezioni ponti L2</title>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0b5a8a"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#e9eef2;--ink:#14202b;--mut:#5b6b78;--ac:#0b5a8a;--ln:#b9c5cf;--ok:#1d7a46;--card:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.4 system-ui,Roboto,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--ac);color:#fff;display:flex;align-items:center;gap:12px;padding:10px 14px}
+header h1{font-size:19px;margin:0;flex:1}
+header small{opacity:.85}
+main{max-width:900px;margin:0 auto;padding:12px}
+button{font:inherit;min-height:48px;padding:0 16px;border:1.5px solid var(--ac);background:#fff;color:var(--ac);border-radius:8px}
+button.p{background:var(--ac);color:#fff}
+header button{background:transparent;color:#fff;border-color:#fff}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.pt{background:var(--card);border:1px solid var(--ln);border-radius:8px;padding:12px 14px;margin:8px 0;display:flex;align-items:center;gap:12px}
+.pt b{flex:1}.pt span{color:var(--mut);font-size:15px}
+details{background:var(--card);border:1px solid var(--ln);border-radius:8px;margin:10px 0}
+summary{padding:14px;font-weight:700;cursor:pointer;min-height:48px}
+.in{padding:4px 14px 14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.w{grid-column:1/-1}
+label{display:block;font-size:15px;color:var(--mut)}
+input,textarea{display:block;width:100%;min-height:48px;margin-top:4px;font:inherit;color:var(--ink);padding:8px 10px;border:1.5px solid var(--ln);border-radius:8px;background:#fff}
+input:focus,textarea:focus,button:focus-visible{outline:3px solid #f0a500;outline-offset:1px}
+.ch{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.c{border-color:var(--ln);color:var(--ink)}
+.c.on{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:700}
+.tb{overflow-x:auto}
+table{border-collapse:collapse;min-width:100%}
+th,td{border:1px solid var(--ln);padding:3px;font-size:14px;text-align:left;min-width:92px}
+td input{margin:0;min-height:44px}
+th:first-child{min-width:150px}
+#st{font-size:14px}
+h3{margin:14px 2px 4px;font-size:16px}
+.dr{background:var(--card);border:1px solid var(--ln);border-radius:8px;margin:8px 0;padding:8px 10px}
+.dr.on{border-left:6px solid var(--ac)}
+.dh{display:flex;gap:8px;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.dh small{color:var(--mut)}
+.gb{background:#e1e8ee;border-radius:6px;padding:2px 8px;font-weight:700}
+.c.ps.on{background:#b3261e;border-color:#b3261e}
+.dr label{margin-top:6px}
+h2{font-size:18px;margin:24px 2px 6px;padding-top:12px;border-top:2px solid var(--ln)}
+main>h2:first-child{border:0;margin-top:4px;padding-top:0}
+.pt{flex-wrap:wrap}.pt b{min-width:160px}
+.dd{border:1px solid var(--ln);border-radius:8px;padding:8px 10px}.dd small{color:var(--mut)}
+@media print{header,button,.row{display:none}body{background:#fff}}
+.ph{display:flex;gap:8px;margin-top:6px}.th{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.th img{height:72px;border:1px solid var(--ln);border-radius:6px}
+#ov{position:fixed;inset:0;background:#000e;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;padding:10px}#ov img{max-width:100%;max-height:72vh}#ov p{margin:8px;text-align:center}
+</style></head><body>
+<header id="h"></header><main id="m"></main>
+<script>
+const E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $=id=>document.getElementById(id);
+const idb=new Promise(r=>{const q=indexedDB.open('ponti_l1',2);q.onupgradeneeded=()=>{const d=q.result;['p','f'].forEach(s=>{if(!d.objectStoreNames.contains(s))d.createObjectStore(s)})};q.onsuccess=()=>r(q.result)});
+const tx=async(mode,f,st='p')=>{const d=await idb;return new Promise(r=>{const q=f(d.transaction(st,mode).objectStore(st));q.onsuccess=()=>r(q.result)})};
+const put=p=>tx('readwrite',s=>s.put(p,p.id)),all=()=>tx('readonly',s=>s.getAll()),del=id=>tx('readwrite',s=>s.delete(id));
+let cur=null,timer,ctx=null,view='home';const X=()=>ctx||cur;
+const V=k=>X().v[k];
+const inp=(k,l,ty='text',x='')=>`<label>${l}<input data-k="${k}" type="${ty}" ${x} value="${E(V(k))}"></label>`;
+async function home(){
+ cur=null;view='home';ctx=null;const p2=(await all()).filter(p=>p.t=='l2').sort((a,b)=>a.name.localeCompare(b.name,'it',{numeric:true}));
+ $('h').innerHTML=`<h1>Ispezioni ponti L2</h1><small>${p2.length} ponti · V_03_00</small>`;
+ $('m').innerHTML=`<h2>Livello 2 – Schede difettologiche</h2><div class="row"><button class="p" data-a="new2">Nuovo ponte</button><button data-a="exp2">Esporta tutto (JSON)</button><button onclick="document.getElementById('imp2').click()">Importa JSON</button><input id="imp2" type="file" accept=".json,.txt" hidden></div>`+
+ (p2.length?p2.map(p=>`<div class="pt"><b>${E(p.name)}</b><span>${(p.d||[]).length} schede</span><button class="p" data-a="o2" data-id="${p.id}">Apri</button><button data-a="del" data-id="${p.id}">Elimina</button></div>`).join(''):'<p>Nessun ponte. Tocca «Nuovo ponte» per iniziare.</p>');
+}
+const sv=t=>{const s=$('st');if(s)s.textContent=t};
+const dirty=()=>{sv('Salvataggio…');clearTimeout(timer);timer=setTimeout(async()=>{if(cur){await put(cur);sv('Salvato')}},300)};
+document.addEventListener('input',e=>{const k=e.target.dataset.k;if(k&&cur){X().v[k]=e.target.value;dirty()}});
+document.addEventListener('change',async e=>{
+ const ph=e.target.dataset.ph;if(ph&&e.target.files[0]){const f=e.target.files[0],T=e.target.dataset;e.target.value='';try{await addFoto(ph,T.d,T.c,f)}catch(x){alert('Foto non salvata: '+x.message)}return}
+ if(e.target.id=='imp2'&&e.target.files[0]){try{const j=JSON.parse(await e.target.files[0].text());let n=0,sk=0;for(const p of j.ponti){if(p.t!='l2'){sk++;continue}const o=await tx('readonly',q=>q.get(p.id));if(o){const m=new Map((o.d||[]).map(x=>[x.id,x]));(p.d||[]).forEach(x=>m.set(x.id,x));p.d=[...m.values()]}await put(p);n++}alert('Importati '+n+' ponti'+(sk?' ('+sk+' di livello 1 ignorati: vanno importati nell’app L1)':''))}catch(x){alert('File non valido')}e.target.value='';home()}
+});
+const dlf=async(t,n,ty)=>{const u=URL.createObjectURL(new Blob([t],{type:ty}));const l=document.createElement('a');l.href=u;l.download=n;l.click();
+ if(navigator.share&&navigator.canShare){for(const f of [new File([t],n,{type:ty}),new File([t],n+'.txt',{type:'text/plain'})]){if(navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:n})}catch(e){}break}}}};
+const dl=(ps,n)=>dlf(JSON.stringify({versione:1,esportato:new Date().toISOString(),ponti:ps}),n,'application/json');
+const keep=f=>{const y=scrollY;f();scrollTo(0,y)};
+document.addEventListener('click',async e=>{
+ const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,k=b.dataset.k;
+ if(a=='new2'){const n=prompt('Nome o sigla del ponte (livello 2)');if(n){cur={id:Date.now().toString(36),t:'l2',name:n,v:{},d:[]};await put(cur);dif()}}
+ else if(a=='o2'){cur=await tx('readonly',q=>q.get(b.dataset.id));dif()}
+ else if(a=='exp2'){dl((await all()).filter(p=>p.t=='l2'),'schede_difetti_'+new Date().toISOString().slice(0,10)+'.json')}
+ else if(a=='ez'){await expZip()}
+ else if(a=='epdf'){await expPdf(b.dataset.id)}
+ else if(a=='fv'){const r=await tx('readonly',s=>s.get(cur.id+'|'+b.dataset.n),'f');if(!r)return;const u=URL.createObjectURL(r.b),o=document.createElement('div');o.id='ov';o.dataset.u=u;o.innerHTML=`<img src="${u}"><p><b>${E(r.n)}</b> · ${E(capOf(r))}</p><div class="row"><button data-a="fx">Chiudi</button><button data-a="fd" data-n="${r.n}">Elimina foto</button></div>`;document.body.appendChild(o)}
+ else if(a=='fx'){const o=$('ov');if(o){URL.revokeObjectURL(o.dataset.u);o.remove()}}
+ else if(a=='fd'){const n=b.dataset.n;if(confirm('Eliminare la foto '+n+'?')){const r=await tx('readonly',s=>s.get(cur.id+'|'+n),'f');await tx('readwrite',s=>s.delete(cur.id+'|'+n),'f');const d=r&&cur.d.find(x=>x.id==r.sid);if(d&&d.v[r.k])d.v[r.k]=String(d.v[r.k]).split(/\s*[,;]\s*/).filter(t=>t&&t.padStart(3,'0')!=n).join(', ');await put(cur);const o=$('ov');if(o){URL.revokeObjectURL(o.dataset.u);o.remove()}if(view=='sch')keep(render)}}
+ else if(a=='cda'){await put(cur);cda()}
+ else if(a=='backc'){dif()}
+ else if(a=='prn'){print()}
+ else if(a=='ecda'){const R=calcCdA(),o=[['ponte','passaggio','risultato','dettaglio','ipotesi']];R.G.forEach(g=>g.sc.forEach(r=>{const h=r.hyp.join(', ');r.S.forEach(s=>o.push([cur.name,s.n,s.val,s.det,h]))}));if(R.ok.length>1)o.push([cur.name,'CdA adottata dal tecnico',R.cda!=null?LVL[R.cda].toUpperCase():'DA DECIDERE','','']);R.M.forEach(m=>o.push([cur.name,'DATO MANCANTE',m,'']));R.W.forEach(w=>o.push([cur.name,'AVVISO',w,'']));dlf('\ufeff'+o.map(r=>r.map(qc).join(';')).join('\r\n'),'cda_'+cur.name.replace(/[^\w-]+/g,'_')+'.csv','text/csv')}
+ else if(a=='add'){const d={id:Date.now().toString(36),s:+b.dataset.s,v:{}};cur.d.push(d);await put(cur);ctx=d;sch()}
+ else if(a=='os'){ctx=cur.d.find(x=>x.id==b.dataset.id);sch()}
+ else if(a=='ds'){if(confirm('Eliminare questa scheda?')){cur.d=cur.d.filter(x=>x.id!=b.dataset.id);await put(cur);dif()}}
+ else if(a=='back3'){await put(cur);dif()}
+ else if(a=='allnp'){const n=CAT[ctx.s].r.filter(Array.isArray).length;for(let i=0;i<n;i++)if(!ctx.v['r'+i])ctx.v['r'+i]='np';await put(cur);keep(render)}
+ else if(a=='r'){X().v[k]=X().v[k]===b.dataset.o?'':b.dataset.o;b.parentNode.querySelectorAll('.c').forEach(x=>x.classList.toggle('on',X().v[k]===x.dataset.o));dirty();if(b.dataset.rr)keep(render)}
+ else if(a=='back'){await put(cur);home()}
+ else if(a=='del'){if(confirm('Eliminare questa scheda?')){await del(b.dataset.id);await tx('readwrite',s=>s.delete(IDBKeyRange.bound(b.dataset.id+'|',b.dataset.id+'|\uffff')),'f');home()}}
+ else if(a=='ej'||a=='ec'){const L=b.dataset.id?cur.d.filter(x=>x.id==b.dataset.id):cur.d.filter(compiled);if(!L.length){alert('Nessuna scheda compilata da esportare');return}
+  const sf=t=>String(t||'').replace(/[^\w-]+/g,'_'),nm=sf(cur.name)+(b.dataset.id?'_sch'+L[0].s+(L[0].v.n?'-'+sf(L[0].v.n):''):'');
+  if(a=='ej')dl([{...cur,d:L}],'difetti_'+nm+'.json');else dlf(csv(cur,L),'difetti_'+nm+'.csv','text/csv')}
+});
+const CAT={"1":{"t":"Spalle","m":"Calcestruzzo","r":[["c.a/c.a.p._1","Macchie di umidità passiva",1,"111","001",0,0,0],["c.a/c.a.p._2","Macchie di umidità attiva",3,"111","001",0,0,0],["Dif. Gen_1","Tracce di scolo",3,"111","001",0,0,0],["c.a./c.a.p._3","Cls dilavato / ammalorato",3,"111","001",0,0,0],["Dif. Gen_2","Ristagni d'acqua",2,"111","001",0,0,0],["c.a./c.a.p._4","Vespai",2,"111","111",0,0,0],["c.a./c.a.p._5","Distacco del copriferro",2,"111","001",0,0,0],["c.a./c.a.p._6","Armatura ossidata/corrosa",5,"111","111",1,0,0],["c.a./c.a.p._7","Lesioni a ragnatela modeste",1,"111","001",0,0,0],["c.a./c.a.p._8","Fessure orizzontali",2,"111","111",0,0,0],["c.a./c.a.p._9","Fessure verticali",2,"111","111",0,0,0],["c.a./c.a.p._10","Fessure diagonali",5,"111","111",1,0,0],["c.a./c.a.p._11","Lesioni attacco pilastri (spalle a telaio)",3,"111","111",0,0,0],["c.a./c.a.p._12","Riprese successive deteriorate",1,"111","111",0,0,0],["Dif. Gen_3","Danni da urto",4,"001","111",1,0,0],["Dif. Gen_6","Fuori piombo",5,"111","111",1,0,["2:4%","4:6%",">6%"]],["Ril/Fond_1","Scalzamento",5,"001","111",1,0,0],["Ril/Fond_2","Dilavamento del rilevato",1,"001","001",0,0,0],["Ril/Fond_3","Dissesto del rilevato - deformazioni",2,"001","111",0,0,0],["Ril/Fond_4","Dissesto del rilevato - stabilità",4,"001","001",1,0,0],["Ril/Fond_5","Movimenti di fondazione",5,"111","111",1,0,0],["c.a./c.a.p._13","Lesioni da schiacciamento",4,"001","111",1,0,["2:4%","4:6%",">6%"]],["Dif. Gen_4","Lesioni caratteristiche zone appoggio",3,"111","111",0,0,["2:4%","4:6%",">6%"]]]},"2":{"t":"Spalle","m":"Muratura","r":[["Mur_1","Fessure orizzontali",3,"111","111",0,0,0],["Mur_2","Fessure verticali",4,"111","111",1,0,0],["Mur_3","Fessure diagonali",4,"111","111",1,0,0],["Mur_9","Macchie di umidità / risalita",1,"111","001",0,0,0],["Dif. Gen_1","Tracce di scolo",3,"111","001",0,0,0],["Mur_10","Dilavamento",2,"111","001",0,0,0],["Dif. Gen_2","Ristagni d'acqua",2,"111","001",0,0,0],["Mur_4","Porzione di muratura mancante",3,"111","001",0,0,0],["Dif. Gen_3","Danni da urto",4,"001","111",1,0,0],["Mur_8","Riprese successive deteriorate",1,"001","001",0,0,0],["Mur_11","Macchie di colore scuro",1,"111","001",0,0,0],["Mur_12","Efflorescenze",1,"111","001",0,0,0],["Mur_13","Patina biologica",1,"111","001",0,0,0],["Mur_14","Polverizzazione",3,"111","111",0,0,0],["Mur_15","Esfoliazione",1,"111","001",0,0,0],["Dif. Gen_6","Fuori piombo",5,"111","111",1,0,["2:4%","4:6%",">6%"]],["Ril/Fond_1","Scalzamento",5,"001","111",1,0,0],["Ril/Fond_2","Dilavamento del rilevato",1,"001","001",0,0,0],["Ril/Fond_3","Dissesto del rilevato - deformazioni",2,"001","111",0,0,0],["Ril/Fond_4","Dissesto del rilevato - stabilità",4,"001","001",1,0,0],["Ril/Fond_5","Movimenti di fondazione",5,"111","111",1,0,0],["Dif. Gen_4","Lesioni caratteristiche zone appoggio",3,"111","111",0,0,["2:4%","4:6%",">6%"]]]},"3":{"t":"Pile","m":"Calcestruzzo","r":[["c.a/c.a.p._1","Macchie di umidità passiva",1,"111","111",0,0,0],["c.a/c.a.p._2","Macchie di umidità attiva",3,"111","001",0,0,0],["Dif. Gen_1","Tracce di scolo",3,"111","001",0,0,0],["c.a./c.a.p._3","Cls dilavato / ammalorato",3,"111","001",0,0,0],["Dif. Gen_2","Ristagni d'acqua",2,"111","001",0,0,0],["c.a./c.a.p._4","Vespai",2,"111","111",0,0,0],["c.a./c.a.p._5","Distacco del copriferro",2,"111","001",0,0,0],["c.a./c.a.p._6","Armatura ossidata/corrosa",5,"111","111",1,0,0],["c.a./c.a.p._7","Lesioni a ragnatela modeste",1,"111","111",0,0,0],["c.a./c.a.p._15","Lesioni in corrispondenza staffe",2,"111","111",0,0,0],["c.a./c.a.p._8","Fessure orizzontali",2,"111","111",0,0,0],["c.a./c.a.p._9","Fessure verticali",2,"111","111",0,0,0],["c.a./c.a.p._10","Fessure diagonali",5,"111","111",1,0,0],["c.a./c.a.p._16","Staffe scoperte / ossidate",3,"001","111",0,0,0],["c.a./c.a.p._11","Lesioni attacco pilastri",3,"111","111",0,0,0],["c.a./c.a.p._23","Rottura staffe",4,"111","001",1,0,0],["c.a./c.a.p._17","Armatura longitudinale deformata",5,"001","001",1,0,0],["c.a./c.a.p._12","Riprese successive deteriorate",1,"001","001",0,0,0],["Dif. Gen_3","Danni da urto",4,"001","111",1,0,0],["Dif. Gen_6","Fuori piombo",5,"111","111",1,0,["2:4%","4:6%",">6%"]],["Ril/Fond_1","Scalzamento",5,"001","111",1,0,0],["Ril/Fond_5","Movimenti di fondazione",5,"111","111",1,0,0],["c.a./c.a.p._13","Lesioni da schiacciamento",4,"001","111",1,0,["2:4%","4:6%",">6%"]],["Dif. Gen_4","Lesioni caratteristiche zone appoggio",3,"111","111",1,0,["2:4%","4:6%",">6%"]]]},"4":{"t":"Pile","m":"Muratura","r":[["Mur_1","Fessure orizzontali",3,"111","111",0,0,0],["Mur_2","Fessure verticali",4,"111","111",1,0,0],["Mur_3","Fessure diagonali",4,"111","111",1,0,0],["Mur_9","Macchie di umidità / risalita",1,"111","001",0,0,0],["Dif. Gen_1","Tracce di scolo",3,"111","001",0,0,0],["Mur_10","Dilavamento",2,"111","001",0,0,0],["Dif. Gen_2","Ristagni d'acqua",2,"111","001",0,0,0],["Mur_4","Porzione di muratura mancante",3,"111","001",0,0,0],["Dif. Gen_3","Danni da urto",4,"001","111",1,0,0],["Mur_8","Riprese successive deteriorate",1,"001","001",0,0,0],["Mur_11","Macchie di colore scuro",1,"111","001",0,0,0],["Mur_12","Efflorescenze",1,"111","001",0,0,0],["Mur_13","Patina biologica",1,"111","001",0,0,0],["Mur_14","Polverizzazione",3,"111","111",0,0,0],["Mur_15","Esfoliazione",1,"111","001",0,0,0],["Dif. Gen_6","Fuori piombo",5,"111","111",1,0,["2:4%","4:6%",">6%"]],["Ril/Fond_1","Scalzamento",5,"001","001",1,0,0],["Ril/Fond_5","Movimenti di fondazione",5,"111","001",1,0,0],["Dif. Gen_4","Lesioni caratteristiche zone appoggio",3,"111","111",0,0,["2:4%","4:6%",">6%"]]]},"5":{"t":"Pile","m":"Metallo o Acciaio","r":[["Acc_1","Difetti di saldature",4,"111","001",1,0,0],["Acc_2","Rottura di saldature",5,"111","001",1,0,0],["Acc_3","Sfogliamento vernice",2,"111","001",0,0,0],["Acc_4","Difetti di chiodatura",5,"111","111",1,0,0],["Acc_5","Bulloni allentati",4,"111","001",1,0,0],["Acc_6","Bulloni tranciati",5,"111","001",1,0,0],["Acc_7","Deformazioni anime / piattabande",3,"111","111",0,0,0],["Acc_8","Deformazioni pareti travi scatolari",3,"111","001",0,0,0],["Dif. Gen_2","Ristagni d'acqua",2,"111","001",0,0,0],["Acc_9","Lesioni ai nodi",5,"111","001",1,0,0],["Acc_10","Corrosione",4,"111","001",1,0,0],["Acc_11","Ossidazione",2,"111","001",0,0,0],["Dif. Gen_3","Danni da urto",4,"001","111",1,0,0],["Dif. Gen_6","Fuori piombo",5,"111","111",1,0,["2:4%","4:6%",">6%"]],["Ril/Fond_1","Scalzamento",5,"001","111",1,0,0],["Ril/Fond_5","Movimenti di fondazione",5,"111","111",1,0,0]]},"6":{"t":"Appoggi","m":"","r":[["App_1","Piastra di base deformata",2,"001","111",0,0,0],["App_2","Ossidazione",2,"111","111",0,0,0],["App_3","Bloccaggio",4,"001","111",1,0,0],["App_4","Preregolazione sbagliata",4,"001","111",1,0,0],["App_5","Presenza di detriti",2,"001","001",0,0,0],["App_6","Schiacciamento/Fuoriuscita lastre piombo",4,"001","111",1,0,0],"Difetti d'appoggio in neoprene",["App_7","Invecchiamento neoprene",3,"001","111",0,0,0],["App_8","Deformazione orizzontale eccessiva",4,"001","111",1,0,0],["App_9","Schiacciamento/Fuoriuscita neoprene",4,"001","111",1,0,0],"Difetti pendoli",["App_10","Ammoloramento pendoli in c.a.",4,"001","111",1,0,0],["App_11","Fuori piombo permanente",4,"001","111",1,0,0],"Difetti carrelli (metallici)",["App_12","Ovalizzazione rulli metallici",4,"001","111",1,0,0],["App_13","Fuori sede rulli metallici",4,"001","111",1,0,0],"Difetti di appoggio generici",["App_14","Deterioramento Teflon",3,"001","111",0,0,0]]},"7":{"t":"Giunti","m":"","r":[["Giunt_1","Dislivello giunto pavimentazione",1,"111","111",0,0,["<5cm","1:3",">3cm"]],["Giunt_2","Dislivello tra elementi contigui",1,"111","111",0,0,0],["Giunt_3","Riparazioni Provvisorie Giunti",1,"001","001",0,0,0],["Giunt_4","Massetti lesionati",2,"001","001",0,0,0],["Giunt_5","Distacco tampone",1,"001","001",0,0,0],["Giunt_6","Deformazione tampone",1,"001","001",0,0,0],["Giunt_7","Ammaloramento profilati",2,"001","001",0,0,0],["Giunt_8","Deformazione/Rottura elementi di continuità",2,"111","001",0,0,0],["Giunt_9","Scossalina permeabile o assente",2,"111","001",0,0,0]]},"8":{"t":"Piedritti","m":"Calcestruzzo","r":[["c.a/c.a.p._1","Macchie di umidità passiva",1,"111","001",0,0,0],["c.a/c.a.p._2","Macchie di umidità attiva",3,"111","001",0,0,0],["c.a./c.a.p._3","Cls dilavato / ammalorato",3,"111","001",0,0,0],["Dif. Gen_1","Tracce di scolo",3,"111","001",0,0,0],["c.a./c.a.p._4","Vespai",2,"111","111",0,0,0],["c.a./c.a.p._5","Distacco del copriferro",2,"111","001",0,0,0],["c.a./c.a.p._6","Armatura ossidata/corrosa",5,"111","111",1,0,0],["c.a./c.a.p._7","Lesioni a ragnatela modeste",1,"111","001",0,0,0],["c.a./c.a.p._8","Fessure orizzontali",2,"111","111",0,0,0],["c.a./c.a.p._9","Fessure verticali",2,"111","111",0,0,0],["c.a./c.a.p._13","Lesioni da schiacciamento",4,"001","111",1,0,["2:4%","4:6%",">6%"]],["c.a./c.a.p._10","Fessure diagonali",5,"111","111",1,0,["2:4%","4:6%",">6%"]],["c.a./c.a.p._16","Staffe scoperte/ossidate",3,"111","111",0,0,0],["c.a./c.a.p._11","Lesioni attacco pilastri",3,"111","111",0,0,0],["c.a./c.a.p._23","Rottura staffe",4,"111","001",1,0,0],["c.a./c.a.p._17","Armatura longitudinale deformata",5,"001","001",1,0,0],["c.a./c.a.p._12","Riprese successive deteriorate",1,"001","001",0,0,0],["Dif. Gen_3","Danni da urto",4,"001","111",1,0,0],["Dif. Gen_6","Fuori piombo",5,"111","111",1,0,["2:4%","4:6%",">6%"]]]},"9":{"t":"Piedritti","m":"Metallo o Acciaio","r":[["Acc_1","Difetti di saldature",4,"111","001",1,0,0],["Acc_2","Rottura di saldature",5,"111","001",1,0,0],["Acc_3","Sfogliamento vernice",2,"111","001",0,0,0],["Acc_4","Difetti di chiodatura",5,"111","111",1,0,0],["Acc_5","Bulloni allentati",4,"111","001",1,0,0],["Acc_6","Bulloni tranciati",5,"111","001",1,0,0],["Acc_7","Deformazioni anime / piattabande",3,"111","111",0,0,0],["Acc_8","Deformazioni pareti travi scatolari",3,"111","001",0,0,0],["Dif. Gen_2","Ristagni d'acqua",2,"111","001",0,0,0],["Acc_9","Lesioni ai nodi",5,"111","001",1,0,0],["Acc_10","Corrosione",4,"111","001",1,0,0],["Acc_11","Ossidazione",2,"111","001",0,0,0],["Dif. Gen_3","Danni da urto",4,"001","111",1,0,0],["Dif. Gen_5","Fuori piombo",5,"111","111",1,0,["2:4%","4:6%",">6%"]]]},"10":{"t":"Archi","m":"Calcestruzzo","r":[["c.a/c.a.p._1","Macchie di umidità passiva",1,"111","001",0,0,0],["c.a/c.a.p._2","Macchie di umidità attiva",3,"111","001",0,0,0],["Dif. Gen_1","Tracce di scolo",3,"111","001",0,0,0],["c.a./c.a.p._3","Cls dilavato / ammalorato",3,"111","001",0,0,0],["c.a./c.a.p._4","Vespai",2,"111","111",0,0,0],["c.a./c.a.p._5","Distacco del copriferro",2,"111","001",0,0,0],["c.a./c.a.p._6","Armatura ossidata / corrosa",5,"111","111",1,0,0],["c.a./c.a.p._7","Lesioni a ragnatela modeste",1,"111","001",0,0,0],["c.a./c.a.p._10","Fessure diagonali",5,"111","111",1,0,0],["c.a./c.a.p._18","Fessure longitudinali",2,"111","111",0,0,0],["c.a./c.a.p._19","Fessure trasversali",5,"111","111",1,0,0],["c.a./c.a.p._16","Staffe scoperte / ossidate",3,"111","111",0,0,0],["c.a./c.a.p._20","Distacco del timpano",3,"111","111",0,0,0],["c.a./c.a.p._12","Riprese successive deteriorate",1,"001","001",0,0,0],["Dif. Gen_3","Danni da urto",4,"001","111",1,0,0]]},"11":{"t":"Archi","m":"Muratura","r":[["Mur_1","Fessure orizzontali",3,"001","111",0,0,0],["Mur_2","Fessure verticali",4,"001","111",1,0,0],["Mur_3","Fessure diagonali",4,"001","111",1,0,0],["Mur_7","Distacco del timpano",3,"001","111",0,0,0],["Mur_9","Macchie di umidità / risalita",1,"111","001",0,0,0],["Dif. Gen_1","Tracce di scolo",3,"111","001",0,0,0],["Mur_10","Dilavamento",2,"111","001",0,0,0],["Mur_4","Porzione di muratura mancante",3,"111","001",0,0,0],["Mur_8","Riprese successive deteriorate",1,"001","001",0,0,0],["Mur_11","Macchie di colore scuro",1,"111","001",0,0,0],["Mur_12","Efflorescenze",1,"111","001",0,0,0],["Mur_13","Patina biologica",1,"111","001",0,0,0],["Mur_14","Polverizzazione",3,"111","111",0,0,0],["Mur_15","Esfoliazione",1,"111","001",0,0,0],["Mur_6","Fessure longitudinali",4,"111","111",1,0,0],["Mur_5","Fessure trasversali",5,"001","111",1,0,0]]},"12":{"t":"Archi","m":"Metallo o Acciaio","r":[["Acc_1","Difetti di saldature",4,"111","001",1,0,0],["Acc_2","Rottura di saldature",5,"111","001",1,0,0],["Acc_3","Sfogliamento vernice",2,"111","001",0,0,0],["Acc_4","Difetti di chiodatura",5,"111","111",1,0,0],["Acc_5","Bulloni allentati",4,"111","001",1,0,0],["Acc_6","Bulloni tranciati",5,"111","001",1,0,0],["Acc_7","Deformazioni anime / piattabande",3,"111","111",0,0,0],["Acc_8","Deformazioni pareti travi scatolari",3,"111","001",0,0,0],["Dif. Gen_2","Ristagni d'acqua",1,"111","001",0,0,0],["Acc_9","Lesioni ai nodi",5,"111","001",1,0,0],["Acc_10","Corrosione",4,"111","001",1,0,0],["Acc_11","Ossidazione",2,"111","001",0,0,0]]},"13":{"t":"Archi","m":"Legno","r":[["Legno_1","Macchie di umidità",3,"111","111",0,0,0],["Legno_2","Attacco di funghi",5,"111","111",1,0,0],["Legno_3","Attacco di insetti",4,"111","111",1,0,0],["Legno_4","Fessure elicoidali",2,"111","111",0,0,0],["Legno_5","Fessure longitudinali",1,"100","111",0,0,0],["Legno_6","Fessure trasversali",5,"001","001",1,0,0],["Legno_7","Ristagni / trappole d'acqua",5,"111","111",1,0,0],["Legno_8","Danni da urto",4,"111","111",1,0,0],["Legno_9","Bulloni Allentati",1,"001","001",0,0,0],["Legno_10","Delaminazione (legno lamellare)",1,"111","111",0,0,0],["Legno_11","Connessioni deteriorate",5,"111","111",1,0,0]]},"14":{"t":"Travi/Traversi","m":"C.a.","r":[["c.a/c.a.p._1","Macchie di umidità passiva",1,"111","001",0,0,0],["c.a/c.a.p._2","Macchie di umidità attiva",3,"111","001",0,0,0],["Dif. Gen_1","Tracce di scolo",3,"111","001",0,0,0],["c.a./c.a.p._3","Cls dilavato / ammalorato",3,"111","001",0,0,0],["c.a./c.a.p._21","Cls dilavato / ammalorato Testate",4,"001","001",1,0,0],["Dif. Gen_2","Ristagni d'acqua",2,"111","001",0,0,0],["Dif. Gen_5","Ristagni d'acqua nei cassoni",4,"111","001",1,0,0],["c.a./c.a.p._4","Vespai",2,"111","111",0,0,0],["c.a./c.a.p._5","Distacco del copriferro",2,"111","001",0,0,0],["c.a./c.a.p._6","Armatura ossidata/corrosa",5,"111","111",1,0,0],["c.a./c.a.p._15","Lesioni in corrispondenza staffe",2,"111","111",0,0,0],["c.a./c.a.p._7","Lesioni a ragnatela modeste",1,"111","111",0,0,0],["c.a./c.a.p._10","Fessure diagonali",5,"111","111",1,0,0],["c.a./c.a.p._19","Fessure trasversali",5,"111","111",1,0,0],["c.a./c.a.p._18","Fessure longitudinali",2,"111","111",0,0,0],["c.a./c.a.p._22","Lesioni / distacco travi traversi",3,"111","111",0,0,0],["c.a./c.a.p._16","Staffe scoperte / ossidate",3,"111","111",0,0,0],["c.a./c.a.p._23","Rottura staffe",4,"111","001",1,0,0],["c.a./c.a.p._12","Riprese successive deteriorate",1,"001","001",0,0,0],["Dif. Gen_3","Danni da urto",4,"001","111",1,0,0],["c.a./c.a.p._17","Armatura longitudinale deformata",5,"001","111",1,0,0]]},"15":{"t":"Travi/Traversi","m":"C.A.P.","r":[["c.a/c.a.p._1","Macchie di umidità passiva",1,"111","001",0,0,0],["c.a/c.a.p._2","Macchie di umidità attiva",3,"111","001",0,0,0],["Dif. Gen_1","Tracce di scolo",3,"111","001",0,0,0],["c.a./c.a.p._3","Cls dilavato / ammalorato",3,"111","001",0,0,0],["c.a./c.a.p._21","Cls dilavato / ammalorato Testate",3,"111","001",0,0,0],["Dif. Gen_2","Ristagni d'acqua",2,"111","001",0,0,0],["Dif. Gen_5","Ristagni d'acqua nei cassoni",4,"111","001",1,0,0],["c.a./c.a.p._4","Vespai",2,"111","111",0,0,0],["c.a./c.a.p._5","Distacco del copriferro",2,"111","001",0,0,0],["c.a./c.a.p._6","Armatura ossidata / corrosa",5,"111","111",1,0,0],["c.a.p_1","Lesioni capillari agli ancoraggi",1,"111","111",0,0,0],["c.a.p_2","Testate di ancoraggio non sigill.",2,"111","001",0,0,0],["c.a.p_3","Distacco tamponi testate",1,"111","001",0,0,0],["c.a.p_4","Lesioni su anima lungo i cavi",2,"111","111",0,0,0],["c.a.p_5","Lesioni lungo suola del bulbo",2,"111","111",0,0,0],["c.a.p_6","Guaine in vista",2,"111","001",0,0,0],["c.a.p_7","Guaine degradate e fili ossidati",4,"111","111",1,0,0],["c.a.p_8","Fili aderenti in vista ossidati",4,"111","111",1,0,0],["c.a./c.a.p._7","Lesioni a ragnatela modeste",1,"111","001",0,0,0],["c.a./c.a.p._10","Fessure diagonali",5,"111","111",1,0,0],["c.a./c.a.p._19","Fessure trasversali",5,"111","111",1,0,0],["c.a./c.a.p._22","Lesioni / distacco travi traversi",3,"111","111",0,0,0],["c.a./c.a.p._16","Staffe scoperte / ossidate",3,"111","111",0,0,0],["c.a./c.a.p._23","Rottura staffe",4,"111","001",1,0,0],["c.a./c.a.p._12","Riprese successive deteriorate",1,"001","001",0,0,0],["c.a.p_9","Riduzione armatura di precompr.",5,"111","111",1,0,0],["c.a.p_10","Umidità dall'interno",2,"111","001",0,0,0],["c.a.p_11","Arm. Scoperta / ossidata testate",2,"111","111",0,0,0],["c.a.p_12","Fuoriuscita barre ancoraggio",5,"111","001",1,0,0],["Dif. Gen_3","Danni da urto",4,"001","111",1,0,0],["c.a./c.a.p._17","Armatura longitudinale deformata",5,"001","111",1,0,0]]},"16":{"t":"Travi","m":"Metallo o Acciaio","r":[["Acc_1","Difetti di saldature",4,"111","001",1,0,0],["Acc_2","Rottura di saldature",5,"111","001",1,0,0],["Acc_3","Sfogliamento vernice",2,"111","001",0,0,0],["Acc_4","Difetti di chiodatura",5,"111","111",1,0,0],["Acc_5","Bulloni allentati",4,"111","001",1,0,0],["Acc_6","Bulloni tranciati",5,"111","001",1,0,0],["Acc_7","Deformazioni anime / piattabande",3,"111","111",0,0,0],["Acc_8","Deformazioni pareti travi scatolari",3,"111","001",0,0,0],["Dif. Gen_2","Ristagni d'acqua",1,"111","001",0,0,0],["Dif. Gen_5","Ristagni d'acqua nei cassoni",4,"111","001",1,0,0],["Acc_9","Lesioni ai nodi",5,"111","001",1,0,0],["Acc_10","Corrosione",4,"111","001",1,0,0],["Acc_11","Ossidazione",2,"111","001",0,0,0]]},"17":{"t":"Travi/Traversi","m":"Legno","r":[["Legno_1","Macchie di umidità",3,"111","111",0,0,0],["Legno_2","Attacco di funghi",5,"111","111",1,0,0],["Legno_3","Attacco di insetti",4,"111","111",1,0,0],["Legno_4","Fessure elicoidali",2,"111","111",0,0,0],["Legno_5","Fessure longitudinali",1,"100","111",0,0,0],["Legno_6","Fessure trasversali",5,"001","001",1,0,0],["Legno_7","Ristagni / trappole d'acqua",5,"111","111",1,0,0],["Legno_8","Danni da urto",4,"111","111",1,0,0],["Legno_9","Bulloni Allentati",1,"001","001",0,0,0],["Legno_10","Delaminazione (legno lamellare)",1,"111","111",0,0,0],["Legno_11","Connessioni deteriorate",5,"111","111",1,0,0]]},"18":{"t":"Soletta","m":"C.a.","r":[["c.a/c.a.p._1","Macchie di umidità passiva",1,"111","001",0,0,0],["c.a/c.a.p._2","Macchie di umidità attiva",3,"111","001",0,0,0],["Dif. Gen_1","Tracce di scolo",3,"111","001",0,0,0],["c.a./c.a.p._3","Cls dilavato / ammalorato",3,"111","001",0,0,0],["c.a./c.a.p._4","Vespai",2,"111","111",0,0,0],["c.a./c.a.p._5","Distacco del copriferro",2,"111","001",0,0,0],["c.a./c.a.p._6","Armatura ossidata / corrosa",5,"111","111",1,0,0],["c.a./c.a.p._7","Lesioni a ragnatela modeste",1,"111","001",0,0,0],["c.a./c.a.p._10","Fessure diagonali",5,"111","111",1,0,0],["c.a./c.a.p._18","Fessure longitudinali",2,"111","111",0,0,0],["c.a./c.a.p._19","Fessure trasversali",5,"111","111",1,0,0],["c.a./c.a.p._24","Lesioni attacco trave-soletta",2,"111","111",0,0,0],["c.a./c.a.p._12","Riprese successive deteriorate",1,"001","001",0,0,0]]},"19":{"t":"Soletta","m":"Legno","r":[["Legno_1","Macchie di umidità",3,"111","111",0,0,0],["Legno_2","Attacco di funghi",5,"111","111",1,0,0],["Legno_3","Attacco di insetti",4,"111","111",1,0,0],["Legno_4","Fessure elicoidali",2,"111","111",0,0,0],["Legno_5","Fessure longitudinali",1,"100","111",0,0,0],["Legno_6","Fessure trasversali",5,"001","001",1,0,0],["Legno_7","Ristagni / trappole d'acqua",5,"111","111",1,0,0],["Legno_8","Danni da urto",4,"111","111",1,0,0],["Legno_9","Bulloni Allentati",1,"001","001",0,0,0],["Legno_10","Delaminazione (legno lamellare)",1,"111","111",0,0,0],["Legno_11","Connessioni deteriorate",5,"111","111",1,0,0]]},"21":{"t":"Muro d'ala","m":"Calcestruzzo","r":[["c.a/c.a.p._1","Macchie di umidità passiva",1,"111","001",0,0,0],["c.a/c.a.p._2","Macchie di umidità attiva",3,"111","001",0,0,0],["Dif. Gen_1","Tracce di scolo",3,"111","001",0,0,0],["c.a./c.a.p._3","Cls dilavato / ammalorato",3,"111","001",0,0,0],["Dif. Gen_2","Ristagni d'acqua",2,"111","001",0,0,0],["c.a./c.a.p._4","Vespai",2,"111","111",0,0,0],["c.a./c.a.p._5","Distacco del copriferro",2,"111","001",0,0,0],["c.a./c.a.p._6","Armatura ossidata/corrosa",5,"111","111",1,0,0],["c.a./c.a.p._7","Lesioni a ragnatela modeste",1,"111","001",0,0,0],["c.a./c.a.p._8","Fessure orizzontali",2,"111","111",0,0,0],["c.a./c.a.p._9","Fessure verticali",2,"111","111",0,0,0],["c.a./c.a.p._10","Fessure diagonali",5,"111","111",1,0,0],["c.a./c.a.p._12","Riprese successive deteriorate",1,"111","111",0,0,0],["Dif. Gen_3","Danni da urto",4,"001","111",1,0,0],["Dif. Gen_6","Fuori piombo",5,"111","111",1,0,["2:4%","4:6%",">6%"]],["c.a./c.a.p._13","Lesioni da schiacciamento",4,"111","111",1,0,["2:4%","4:6%",">6%"]]]},"22":{"t":"Muro andatore","m":"Calcestruzzo","r":[["c.a/c.a.p._1","Macchie di umidità passiva",1,"111","001",0,0,0],["c.a/c.a.p._2","Macchie di umidità attiva",3,"111","001",0,0,0],["Dif. Gen_1","Tracce di scolo",3,"111","001",0,0,0],["c.a./c.a.p._3","Cls dilavato / ammalorato",3,"111","001",0,0,0],["Dif. Gen_2","Ristagni d'acqua",2,"111","001",0,0,0],["c.a./c.a.p._4","Vespai",2,"111","111",0,0,0],["c.a./c.a.p._5","Distacco del copriferro",2,"111","001",0,0,0],["c.a./c.a.p._6","Armatura ossidata/corrosa",5,"111","111",1,0,0],["c.a./c.a.p._7","Lesioni a ragnatela modeste",1,"111","001",0,0,0],["c.a./c.a.p._8","Fessure orizzontali",2,"111","111",0,0,0],["c.a./c.a.p._9","Fessure verticali",2,"111","111",0,0,0],["c.a./c.a.p._10","Fessure diagonali",5,"111","111",1,0,0],["c.a./c.a.p._12","Riprese successive deteriorate",1,"111","111",0,0,0],["Dif. Gen_3","Danni da urto",4,"001","111",1,0,0],["Dif. Gen_6","Fuori piombo",5,"111","111",1,0,["2:4%","4:6%",">6%"]],["c.a./c.a.p._13","Lesioni da schiacciamento",4,"111","111",1,0,["2:4%","4:6%",">6%"]]]},"23":{"t":"Paraghiaia","m":"Calcestruzzo","r":[["c.a/c.a.p._1","Macchie di umidità passiva",1,"111","001",0,0,0],["c.a/c.a.p._2","Macchie di umidità attiva",3,"111","001",0,0,0],["Dif. Gen_1","Tracce di scolo",3,"111","001",0,0,0],["c.a./c.a.p._3","Cls dilavato / ammalorato",3,"111","001",0,0,0],["Dif. Gen_2","Ristagni d'acqua",2,"111","001",0,0,0],["c.a./c.a.p._4","Vespai",2,"111","111",0,0,0],["c.a./c.a.p._5","Distacco del copriferro",2,"111","001",0,0,0],["c.a./c.a.p._6","Armatura ossidata/corrosa",5,"111","111",1,0,0],["c.a./c.a.p._7","Lesioni a ragnatela modeste",1,"111","001",0,0,0],["c.a./c.a.p._8","Fessure orizzontali",2,"111","111",0,0,0],["c.a./c.a.p._9","Fessure verticali",2,"111","111",0,0,0],["c.a./c.a.p._10","Fessure diagonali",5,"111","111",1,0,0],["c.a./c.a.p._12","Riprese successive deteriorate",1,"111","111",0,0,0],["c.a./c.a.p._13","Lesioni da schiacciamento",4,"111","111",1,0,["2:4%","4:6%",">6%"]]]},"24":{"t":"Baggioli","m":"Calcestruzzo","r":[["c.a/c.a.p._1","Macchie di umidità passiva",1,"111","001",0,0,0],["c.a/c.a.p._2","Macchie di umidità attiva",3,"111","001",0,0,0],["Dif. Gen_1","Tracce di scolo",3,"111","001",0,0,0],["c.a./c.a.p._3","Cls dilavato / ammalorato",3,"111","001",0,0,0],["Dif. Gen_2","Ristagni d'acqua",2,"111","001",0,0,0],["c.a./c.a.p._4","Vespai",2,"111","111",0,0,0],["c.a./c.a.p._5","Distacco del copriferro",2,"111","001",0,0,0],["c.a./c.a.p._6","Armatura ossidata/corrosa",5,"111","111",1,0,0],["c.a./c.a.p._7","Lesioni a ragnatela modeste",1,"111","001",0,0,0],["c.a./c.a.p._8","Fessure orizzontali",2,"111","111",0,0,0],["c.a./c.a.p._9","Fessure verticali",2,"111","111",0,0,0],["c.a./c.a.p._10","Fessure diagonali",5,"111","111",1,0,0],["c.a./c.a.p._12","Riprese successive deteriorate",1,"111","111",0,0,0],["c.a./c.a.p._13","Lesioni da schiacciamento",4,"111","111",1,0,["2:4%","4:6%",">6%"]]]},"25":{"t":"Fusti","m":"Calcestruzzo","r":[["c.a/c.a.p._1","Macchie di umidità passiva",1,"111","111",0,0,0],["c.a/c.a.p._2","Macchie di umidità attiva",3,"111","001",0,0,0],["Dif. Gen_1","Tracce di scolo",3,"111","001",0,0,0],["c.a./c.a.p._3","Cls dilavato / ammalorato",3,"111","001",0,0,0],["Dif. Gen_2","Ristagni d'acqua",2,"111","001",0,0,0],["c.a./c.a.p._4","Vespai",2,"111","111",0,0,0],["c.a./c.a.p._5","Distacco del copriferro",2,"111","001",0,0,0],["c.a./c.a.p._6","Armatura ossidata/corrosa",5,"111","111",1,0,0],["c.a./c.a.p._7","Lesioni a ragnatela modeste",1,"111","111",0,0,0],["c.a./c.a.p._15","Lesioni in corrispondenza staffe",2,"111","111",0,0,0],["c.a./c.a.p._8","Fessure orizzontali",2,"111","111",0,0,0],["c.a./c.a.p._9","Fessure verticali",2,"111","111",0,0,0],["c.a./c.a.p._10","Fessure diagonali",5,"111","111",1,0,0],["c.a./c.a.p._16","Staffe scoperte / ossidate",3,"001","111",0,0,0],["c.a./c.a.p._11","Lesioni attacco pilastri",3,"111","111",0,0,0],["c.a./c.a.p._23","Rottura staffe",4,"111","001",1,0,0],["c.a./c.a.p._17","Armatura longitudinale deformata",5,"001","001",1,0,0],["c.a./c.a.p._12","Riprese successive deteriorate",1,"001","001",0,0,0],["Dif. Gen_3","Danni da urto",4,"001","111",1,0,0],["Dif. Gen_6","Fuori piombo",5,"111","111",1,0,["2:4%","4:6%",">6%"]],["Ril/Fond_1","Scalzamento",5,"001","111",1,0,0],["Ril/Fond_5","Movimenti di fondazione",5,"111","111",1,0,0],["c.a./c.a.p._13","Lesioni da schiacciamento",4,"001","111",1,0,["2:4%","4:6%",">6%"]],["Dif. Gen_4","Lesioni caratteristiche zone appoggio",3,"111","111",1,0,["2:4%","4:6%",">6%"]]]},"26":{"t":"Fusti","m":"Metallo o Acciaio","r":[["Acc_1","Difetti di saldature",4,"111","001",1,0,0],["Acc_2","Rottura di saldature",5,"111","001",1,0,0],["Acc_3","Sfogliamento vernice",2,"111","001",0,0,0],["Acc_4","Difetti di chiodatura",5,"111","111",1,0,0],["Acc_5","Bulloni allentati",4,"111","001",1,0,0],["Acc_6","Bulloni tranciati",5,"111","001",1,0,0],["Acc_7","Deformazioni anime / piattabande",3,"111","111",0,0,0],["Acc_8","Deformazioni pareti travi scatolari",3,"111","001",0,0,0],["Dif. Gen_2","Ristagni d'acqua",2,"111","001",0,0,0],["Acc_9","Lesioni ai nodi",5,"111","001",1,0,0],["Acc_10","Corrosione",4,"111","001",1,0,0],["Acc_11","Ossidazione",2,"111","001",0,0,0],["Dif. Gen_3","Danni da urto",4,"001","111",1,0,0],["Dif. Gen_6","Fuori piombo",5,"111","111",1,0,["2:4%","4:6%",">6%"]],["Ril/Fond_1","Scalzamento",5,"001","111",1,0,0],["Ril/Fond_5","Movimenti di fondazione",5,"111","111",1,0,0]]},"27":{"t":"Gerber","m":"C.a.","r":[["c.a/c.a.p._1","Macchie di umidità passiva",1,"111","001",0,0,0],["c.a/c.a.p._2","Macchie di umidità attiva",3,"111","001",0,0,0],["Dif. Gen_1","Tracce di scolo",3,"111","001",0,0,0],["c.a./c.a.p._3","Cls dilavato / ammalorato",3,"111","001",0,0,0],["Dif. Gen_2","Ristagni d'acqua",2,"111","001",1,0,0],["Dif. Gen_5","Ristagni d'acqua nei cassoni",4,"111","001",1,0,0],["c.a./c.a.p._4","Vespai",2,"111","111",0,0,0],["c.a./c.a.p._5","Distacco del copriferro",2,"111","001",0,0,0],["c.a./c.a.p._6","Armatura ossidata/corrosa",5,"111","111",1,0,0],["c.a./c.a.p._15","Lesioni in corrispondenza staffe",2,"111","111",0,0,0],["c.a./c.a.p._7","Lesioni a ragnatela modeste",1,"111","111",0,0,0],["c.a./c.a.p._10","Fessure diagonali",5,"111","111",1,0,0],["c.a./c.a.p._19","Fessure trasversali",5,"111","111",1,0,0],["c.a./c.a.p._18","Fessure longitudinali",2,"111","111",0,0,0],["c.a./c.a.p._16","Staffe scoperte / ossidate",3,"111","111",0,0,0],["c.a./c.a.p._23","Rottura staffe",4,"111","001",1,0,0],["c.a./c.a.p._12","Riprese successive deteriorate",1,"001","001",0,0,0],["Dif. Gen_3","Danni da urto",4,"001","111",1,0,0],["c.a./c.a.p._17","Armatura longitudinale deformata",5,"001","111",1,0,0]]},"28":{"t":"Gerber","m":"C.A.P.","r":[["c.a/c.a.p._1","Macchie di umidità passiva",1,"111","001",0,0,0],["c.a/c.a.p._2","Macchie di umidità attiva",3,"111","001",0,0,0],["Dif. Gen_1","Tracce di scolo",3,"111","001",0,0,0],["c.a./c.a.p._3","Cls dilavato / ammalorato",3,"111","001",0,0,0],["c.a./c.a.p._21","Cls dilavato / ammalorato Testate",3,"111","001",0,0,0],["Dif. Gen_2","Ristagni d'acqua",2,"111","001",0,0,0],["Dif. Gen_5","Ristagni d'acqua nei cassoni",4,"111","001",1,0,0],["c.a./c.a.p._4","Vespai",2,"111","111",0,0,0],["c.a./c.a.p._5","Distacco del copriferro",2,"111","001",0,0,0],["c.a./c.a.p._6","Armatura ossidata / corrosa",5,"111","111",1,0,0],["c.a.p_1","Lesioni capillari agli ancoraggi",1,"111","111",0,0,0],["c.a.p_2","Testate di ancoraggio non sigill.",2,"111","001",0,0,0],["c.a.p_3","Distacco tamponi testate",1,"111","001",0,0,0],["c.a.p_4","Lesioni su anima lungo i cavi",2,"111","111",0,0,0],["c.a.p_5","Lesioni lungo suola del bulbo",2,"111","111",0,0,0],["c.a.p_6","Guaine in vista",2,"111","001",0,0,0],["c.a.p_7","Guaine degradate e fili ossidati",4,"111","111",1,0,0],["c.a.p_8","Fili aderenti in vista ossidati",4,"111","111",1,0,0],["c.a./c.a.p._7","Lesioni a ragnatela modeste",1,"111","001",0,0,0],["c.a./c.a.p._10","Fessure diagonali",5,"111","111",1,0,0],["c.a./c.a.p._19","Fessure trasversali",5,"111","111",1,0,0],["c.a./c.a.p._16","Staffe scoperte / ossidate",3,"111","111",0,0,0],["c.a./c.a.p._23","Rottura staffe",4,"111","001",1,0,0],["c.a./c.a.p._12","Riprese successive deteriorate",1,"001","001",0,0,0],["c.a.p_9","Riduzione armatura di precompr.",5,"111","111",1,0,0],["c.a.p_10","Umidità dall'interno",2,"111","001",0,0,0],["c.a.p_11","Arm. Scoperta / ossidata testate",2,"111","111",0,0,0],["c.a.p_12","Fuoriuscita barre ancoraggio",5,"111","001",1,0,0],["Dif. Gen_3","Danni da urto",4,"001","111",1,0,0],["c.a./c.a.p._17","Armatura longitudinale deformata",5,"001","111",1,0,0]]},"29":{"t":"Gerber","m":"Metallo o Acciaio","r":[["Acc_1","Difetti di saldature",4,"111","001",1,0,0],["Acc_2","Rottura di saldature",5,"111","001",1,0,0],["Acc_3","Sfogliamento vernice",2,"111","001",0,0,0],["Acc_4","Difetti di chiodatura",5,"111","111",1,0,0],["Acc_5","Bulloni allentati",4,"111","001",1,0,0],["Acc_6","Bulloni tranciati",5,"111","001",1,0,0],["Acc_7","Deformazioni anime / piattabande",3,"111","111",0,0,0],["Acc_8","Deformazioni pareti travi scatolari",3,"111","001",0,0,0],["Dif. Gen_2","Ristagni d'acqua",1,"111","001",0,0,0],["Dif. Gen_5","Ristagni d'acqua nei cassoni",4,"111","001",1,0,0],["Acc_9","Lesioni ai nodi",5,"111","001",1,0,0],["Acc_10","Corrosione",4,"111","001",1,0,0],["Acc_11","Ossidazione",2,"111","001",0,0,0]]},"30":{"t":"Sbalzi","m":"C.a.","r":[["c.a/c.a.p._1","Macchie di umidità passiva",1,"111","001",0,0,0],["c.a/c.a.p._2","Macchie di umidità attiva",3,"111","001",0,0,0],["Dif. Gen_1","Tracce di scolo",3,"111","001",0,0,0],["c.a./c.a.p._3","Cls dilavato / ammalorato",3,"111","001",0,0,0],["c.a./c.a.p._4","Vespai",2,"111","111",0,0,0],["c.a./c.a.p._5","Distacco del copriferro",2,"111","001",0,0,0],["c.a./c.a.p._6","Armatura ossidata / corrosa",5,"111","111",1,0,0],["c.a./c.a.p._7","Lesioni a ragnatela modeste",1,"111","001",0,0,0],["c.a./c.a.p._10","Fessure diagonali",5,"111","111",1,0,0],["c.a./c.a.p._18","Fessure longitudinali",2,"111","111",0,0,0],["c.a./c.a.p._19","Fessure trasversali",5,"111","111",1,0,0],["c.a./c.a.p._24","Lesioni attacco trave-soletta",2,"111","111",0,0,0],["c.a./c.a.p._12","Riprese successive deteriorate",1,"001","001",0,0,0]]},"31":{"t":"Lastre Ortotrope","m":"Metallo o Acciaio","r":[["Acc_1","Difetti di saldature",4,"111","001",1,0,0],["Acc_2","Rottura di saldature",5,"111","001",1,0,0],["Acc_3","Sfogliamento vernice",2,"111","001",0,0,0],["Acc_5","Bulloni allentati",4,"111","111",1,0,0],["Acc_6","Bulloni tranciati",5,"111","001",1,0,0],["Acc_7","Deformazioni anime / piattabande",3,"111","111",0,0,0],["Acc_8","Deformazioni pareti travi scatolari",3,"111","001",0,0,0],["Dif. Gen_2","Ristagni d'acqua",1,"111","001",0,0,0],["Dif. Gen_5","Ristagni d'acqua nei cassoni",4,"111","001",1,0,0],["Acc_10","Corrosione",4,"111","001",1,0,0],["Acc_11","Ossidazione",2,"111","001",0,0,0]]},"32":{"t":"Pendini","m":"C.a.","r":[["c.a/c.a.p._1","Macchie di umidità passiva",1,"111","001",0,0,0],["c.a/c.a.p._2","Macchie di umidità attiva",3,"111","001",0,0,0],["Dif. Gen_1","Tracce di scolo",3,"111","001",0,0,0],["c.a./c.a.p._3","Cls dilavato / ammalorato",3,"111","001",0,0,0],["c.a./c.a.p._21","Cls dilavato / ammalorato Testate",4,"001","001",1,0,0],["Dif. Gen_2","Ristagni d'acqua",2,"111","001",0,0,0],["c.a./c.a.p._4","Vespai",2,"111","111",1,0,0],["c.a./c.a.p._5","Distacco del copriferro",2,"111","001",0,0,0],["c.a./c.a.p._6","Armatura ossidata/corrosa",5,"111","111",1,0,0],["c.a./c.a.p._15","Lesioni in corrispondenza staffe",2,"111","111",0,0,0],["c.a./c.a.p._7","Lesioni a ragnatela modeste",1,"111","111",0,0,0],["c.a./c.a.p._10","Fessure diagonali",5,"111","111",1,0,0],["c.a./c.a.p._19","Fessure trasversali",5,"111","111",1,0,0],["c.a./c.a.p._18","Fessure longitudinali",2,"111","111",0,0,0],["c.a./c.a.p._16","Staffe scoperte / ossidate",3,"111","111",0,0,0],["c.a./c.a.p._23","Rottura staffe",4,"111","001",1,0,0],["c.a./c.a.p._12","Riprese successive deteriorate",1,"001","001",0,0,0],["Dif. Gen_3","Danni da urto",4,"001","111",1,0,0],["c.a./c.a.p._17","Armatura longitudinale deformata",5,"001","111",1,0,0]]},"33":{"t":"Pendino","m":"Metallo o Acciaio","r":[["Acc_1","Difetti di saldature",4,"111","001",1,0,0],["Acc_2","Rottura di saldature",5,"111","001",1,0,0],["Acc_3","Sfogliamento vernice",2,"111","001",0,0,0],["Acc_4","Difetti di chiodatura",5,"111","111",1,0,0],["Acc_5","Bulloni allentati",4,"111","001",1,0,0],["Acc_6","Bulloni tranciati",5,"111","001",1,0,0],["Acc_7","Deformazioni anime / piattabande",3,"111","111",0,0,0],["Acc_8","Deformazioni pareti travi scatolari",3,"111","001",0,0,0],["Dif. Gen_2","Ristagni d'acqua",1,"111","001",0,0,0],["Acc_9","Lesioni ai nodi",5,"111","001",1,0,0],["Acc_10","Corrosione",4,"111","001",1,0,0],["Acc_11","Ossidazione",2,"111","001",0,0,0]]},"34":{"t":"Strallo","m":"C.A.P.","r":[["c.a/c.a.p._1","Macchie di umidità passiva",1,"111","001",0,0,0],["c.a/c.a.p._2","Macchie di umidità attiva",3,"111","001",0,0,0],["Dif. Gen_1","Tracce di scolo",3,"111","001",0,0,0],["c.a./c.a.p._3","Cls dilavato / ammalorato",3,"111","001",0,0,0],["c.a./c.a.p._21","Cls dilavato / ammalorato Testate",3,"111","001",0,0,0],["Dif. Gen_2","Ristagni d'acqua",2,"111","001",0,0,0],["Dif. Gen_5","Ristagni d'acqua nei cassoni",4,"111","001",1,0,0],["c.a./c.a.p._4","Vespai",2,"111","111",0,0,0],["c.a./c.a.p._5","Distacco del copriferro",2,"111","001",0,0,0],["c.a./c.a.p._6","Armatura ossidata / corrosa",5,"111","111",1,0,0],["c.a.p_1","Lesioni capillari agli ancoraggi",1,"111","111",0,0,0],["c.a.p_2","Testate di ancoraggio non sigill.",2,"111","001",0,0,0],["c.a.p_3","Distacco tamponi testate",1,"111","001",0,0,0],["c.a.p_4","Lesioni su anima lungo i cavi",2,"111","111",0,0,0],["c.a.p_5","Lesioni lungo suola del bulbo",2,"111","111",0,0,0],["c.a.p_6","Guaine in vista",2,"111","001",0,0,0],["c.a.p_7","Guaine degradate e fili ossidati",4,"111","111",1,0,0],["c.a./c.a.p._7","Lesioni a ragnatela modeste",1,"111","111",1,0,0],["c.a./c.a.p._10","Fessure diagonali",5,"111","111",1,0,0],["c.a./c.a.p._19","Fessure trasversali",5,"111","111",1,0,0],["c.a./c.a.p._22","Lesioni / distacco travi traversi",3,"111","111",0,0,0],["c.a./c.a.p._16","Staffe scoperte / ossidate",3,"111","111",0,0,0],["c.a./c.a.p._23","Rottura staffe",4,"111","001",1,0,0],["c.a./c.a.p._12","Riprese successive deteriorate",1,"001","001",0,0,0],["c.a.p_9","Riduzione armatura di precompr.",5,"111","111",1,0,0],["c.a.p_10","Umidità dall'interno",2,"111","001",0,0,0],["c.a.p_11","Arm. Scoperta / ossidata testate",2,"111","111",0,0,0],["c.a.p_12","Fuoriuscita barre ancoraggio",5,"111","001",1,0,0],["Dif. Gen_3","Danni da urto",4,"001","111",1,0,0],["c.a./c.a.p._17","Armatura longitudinale deformata",5,"001","111",1,0,0]]},"35":{"t":"Strallo","m":"Acciaio","r":[["Acc_1","Difetti di saldature",4,"111","001",1,0,0],["Acc_2","Rottura di saldature",5,"111","001",1,0,0],["Acc_3","Sfogliamento vernice",2,"111","001",0,0,0],["Acc_4","Difetti di chiodatura",5,"111","111",1,0,0],["Acc_5","Bulloni allentati",4,"111","001",1,0,0],["Acc_6","Bulloni tranciati",5,"111","001",1,0,0],["Acc_7","Deformazioni anime / piattabande",3,"111","111",0,0,0],["Acc_8","Deformazioni pareti travi scatolari",3,"111","001",0,0,0],["Dif. Gen_2","Ristagni d'acqua",1,"111","001",0,0,0],["Acc_9","Lesioni ai nodi",5,"111","001",1,0,0],["Acc_10","Corrosione",4,"111","001",1,0,0],["Acc_11","Ossidazione",2,"111","001",0,0,0]]},"36":{"t":"Pulvino","m":"C.a.","r":[["c.a/c.a.p._1","Macchie di umidità passiva",1,"111","001",0,0,0],["c.a/c.a.p._2","Macchie di umidità attiva",3,"111","001",0,0,0],["Dif. Gen_1","Tracce di scolo",3,"111","001",0,0,0],["c.a./c.a.p._3","Cls dilavato / ammalorato",3,"111","001",0,0,0],["c.a./c.a.p._21","Cls dilavato / ammalorato Testate",4,"001","001",1,0,0],["Dif. Gen_2","Ristagni d'acqua",2,"111","001",0,0,0],["Dif. Gen_5","Ristagni d'acqua nei cassoni",4,"111","001",1,0,0],["c.a./c.a.p._4","Vespai",2,"111","111",0,0,0],["c.a./c.a.p._5","Distacco del copriferro",2,"111","001",0,0,0],["c.a./c.a.p._6","Armatura ossidata/corrosa",5,"111","111",1,0,0],["c.a./c.a.p._15","Lesioni in corrispondenza staffe",2,"111","111",0,0,0],["c.a./c.a.p._7","Lesioni a ragnatela modeste",1,"111","111",0,0,0],["c.a./c.a.p._10","Fessure diagonali",5,"111","111",1,0,0],["c.a./c.a.p._19","Fessure trasversali",5,"111","111",1,0,0],["c.a./c.a.p._18","Fessure longitudinali",2,"111","111",0,0,0],["c.a./c.a.p._22","Lesioni / distacco travi traversi",3,"111","111",0,0,0],["c.a./c.a.p._16","Staffe scoperte / ossidate",3,"111","111",0,0,0],["c.a./c.a.p._23","Rottura staffe",4,"111","001",1,0,0],["c.a./c.a.p._12","Riprese successive deteriorate",1,"001","001",0,0,0],["Dif. Gen_3","Danni da urto",4,"001","111",1,0,0],["c.a./c.a.p._17","Armatura longitudinale deformata",5,"001","111",1,0,0]]},"37":{"t":"Pulvino","m":"C.A.P.","r":[["c.a/c.a.p._1","Macchie di umidità passiva",1,"111","001",0,0,0],["c.a/c.a.p._2","Macchie di umidità attiva",3,"111","001",0,0,0],["Dif. Gen_1","Tracce di scolo",3,"111","001",0,0,0],["c.a./c.a.p._3","Cls dilavato / ammalorato",3,"111","001",0,0,0],["c.a./c.a.p._21","Cls dilavato / ammalorato Testate",3,"111","001",0,0,0],["Dif. Gen_2","Ristagni d'acqua",2,"111","001",0,0,0],["Dif. Gen_5","Ristagni d'acqua nei cassoni",4,"111","001",1,0,0],["c.a./c.a.p._4","Vespai",2,"111","111",0,0,0],["c.a./c.a.p._5","Distacco del copriferro",2,"111","001",0,0,0],["c.a./c.a.p._6","Armatura ossidata / corrosa",5,"111","111",1,0,0],["c.a.p_1","Lesioni capillari agli ancoraggi",1,"111","111",0,0,0],["c.a.p_2","Testate di ancoraggio non sigill.",2,"111","001",0,0,0],["c.a.p_3","Distacco tamponi testate",1,"111","001",0,0,0],["c.a.p_4","Lesioni su anima lungo i cavi",2,"111","111",0,0,0],["c.a.p_5","Lesioni lungo suola del bulbo",2,"111","111",0,0,0],["c.a.p_6","Guaine in vista",2,"111","001",0,0,0],["c.a.p_7","Guaine degradate e fili ossidati",4,"111","111",1,0,0],["c.a.p_8","Fili aderenti in vista ossidati",4,"111","111",1,0,0],["c.a./c.a.p._7","Lesioni a ragnatela modeste",1,"111","001",0,0,0],["c.a./c.a.p._10","Fessure diagonali",5,"111","111",1,0,0],["c.a./c.a.p._19","Fessure trasversali",5,"111","111",1,0,0],["c.a./c.a.p._22","Lesioni / distacco travi traversi",3,"111","111",0,0,0],["c.a./c.a.p._16","Staffe scoperte / ossidate",3,"111","111",0,0,0],["c.a./c.a.p._23","Rottura staffe",4,"111","001",1,0,0],["c.a./c.a.p._12","Riprese successive deteriorate",1,"001","001",0,0,0],["c.a.p_9","Riduzione armatura di precompr.",5,"111","111",1,0,0],["c.a.p_10","Umidità dall'interno",2,"111","001",0,0,0],["c.a.p_11","Arm. Scoperta / ossidata testate",2,"111","111",0,0,0],["c.a.p_12","Fuoriuscita barre ancoraggio",5,"111","001",1,0,0],["Dif. Gen_3","Danni da urto",4,"001","111",1,0,0],["c.a./c.a.p._17","Armatura longitudinale deformata",5,"001","111",1,0,0]]},"38":{"t":"Pulvino","m":"Metallo o Acciaio","r":[["Acc_1","Difetti di saldature",4,"111","001",1,0,0],["Acc_2","Rottura di saldature",5,"111","001",1,0,0],["Acc_3","Sfogliamento vernice",2,"111","001",0,0,0],["Acc_4","Difetti di chiodatura",5,"111","111",1,0,0],["Acc_5","Bulloni allentati",4,"111","001",1,0,0],["Acc_6","Bulloni tranciati",5,"111","001",1,0,0],["Acc_7","Deformazioni anime / piattabande",3,"111","111",0,0,0],["Acc_8","Deformazioni pareti travi scatolari",3,"111","001",0,0,0],["Dif. Gen_2","Ristagni d'acqua",1,"111","001",0,0,0],["Dif. Gen_5","Ristagni d'acqua nei cassoni",4,"111","001",1,0,0],["Acc_9","Lesioni ai nodi",5,"111","001",1,0,0],["Acc_10","Corrosione",4,"111","001",1,0,0],["Acc_11","Ossidazione",2,"111","001",0,0,0]]}};
+const EL=[[1,'Stato della pavimentazione','Dislivello rilevato impalcato'],[1,'','Presenza di dossi'],[1,'','Fessure - anomalie'],[2,'Cordoli','Assenti'],[2,'','Degradati'],[3,'Convogliamento acque','Assenti'],[4,'','Pozzetti intasati'],[5,'','Scarichi corti'],[6,'','Scarichi ostruiti'],[7,'','Scarichi danneggiati'],[8,'Marciapiedi','Assenti'],[8,'','Cattiva pavimentazione'],[9,'Pali di illuminazione','Assenti'],[9,'','Mal ancorati'],[9,'','Danneggiati'],[10,'','Arrugginiti'],[11,'Sottoservizi','Assenti'],[11,'','Mal ancorati']];
+const BL=[['ass','Assente'],['mur','Tipologia: muratura'],['rin','Tipologia: ringhiera'],['met','Tipologia: metallico'],['alt','Tipologia: altro'],['dl','Danneggiati lievemente'],['dg','Danneggiati gravemente'],['ol','Ossidati lievemente'],['og','Ossidati gravemente'],['ma','Mal ancorati'],['ed','Ancoraggi danneggiati'],['eo','Ancoraggi ossidati']];
+const NM=n=>n==20?'Elementi accessori':CAT[n].t+(CAT[n].m?' – '+CAT[n].m:'');
+const cp=(k,o,rr,cls='')=>`<div class="ch">${o.map(([v,l])=>`<button type="button" class="c ${cls}${V(k)===v?' on':''}" data-a="r" data-k="${k}" data-o="${E(v)}"${rr?' data-rr="1"':''}>${l}</button>`).join('')}</div>`;
+const ks=(k,m,lb,t)=>{const o=[['0','0,2'],['1','0,5'],['2','1']].filter(([v])=>m[v]=='1').map(([v,l])=>[v,l+(lb&&lb[v]?' · '+lb[v]:'')]);return o.length?`<label>${t}</label>`+cp(k,o,0):''};
+const ck=(k,l,nt)=>`<div class="dr${V(k)?' on':''}"><div class="dh"><b>${l}</b>${cp(k,[['1','Presente']],1)}</div>${V(k)?inp(k+'.f','N° foto')+phb(k+'.f',l,'')+(nt?inp(k+'.n','Note'):''):''}</div>`;
+const prog=d=>d.s==20?Object.values(d.v).filter(Boolean).length+' campi':CAT[d.s].r.filter(Array.isArray).filter((_,i)=>d.v['r'+i]).length+'/'+CAT[d.s].r.filter(Array.isArray).length+' righe';
+const ST={v:'visto',np:'non presente',nr:'non rilevabile',na:'non applicabile'},KV=['0,2','0,5','1'];
+const qc=s=>{s=String(s??'');return /[;"\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
+const compiled=d=>Object.keys(d.v).some(k=>k!='n'&&d.v[k]);
+function csv(rec,L){
+ const o=[['ponte','strada','progressiva_km','tecnico','data','scheda','tipo','n_elemento','codice','descrizione','G','stato','K1','K2','PS','n_foto','note']];
+ for(const d of L){
+  const v=d.v,b=[rec.name,rec.v.strada,rec.v.km,rec.v.tecnico,rec.v.data,d.s,NM(d.s),v.n||''],kv=k=>v[k]==null||v[k]===''?'':KV[v[k]];
+  const row=(c,t,g,st,k1,k2,ps,f,n)=>o.push([...b,c,t,g,st,k1,k2,ps,f,n].map(x=>x??''));
+  if(d.s==20){
+   [['ncorsie','N° corsie'],['lcarr','Larghezza carreggiata [m]'],['lmarc','Larghezza marciapiede [m]'],['hmarc','Altezza marciapiede [m]']].forEach(([k,l])=>v[k]&&row('GEN',l,'',v[k]));
+   v.marc&&row('GEN','Marciapiede','',{1:'sì, su un lato',2:'sì, su entrambi i lati',0:'no'}[v.marc]);
+   v.caso&&row('GEN','Barriere laterali','','caso '+v.caso);
+   EL.forEach(([n,g,t],i)=>v['e'+i]&&row('El.Acc_'+n,t,'','presente','','','',v['e'+i+'.f'],v['e'+i+'.n']));
+   [['g.','Guardiavia'],['p.','Parapetto']].forEach(([p,nm])=>{BL.concat([['pg','Presente come guardiavia'],['pp','Presente come parapetto']]).forEach(([k,l])=>v[p+k]&&row(nm,l,'','presente','','','',v[p+k+'.f']));v[p+'h']&&row(nm,'Altezza (cm)','',v[p+'h'])});
+  }else{let i=-1;CAT[d.s].r.forEach(r=>{if(!Array.isArray(r))return;i++;const s=v['r'+i];if(!s)return;
+   row(r[0],r[1],r[2],ST[s],s=='v'?kv('r'+i+'.a'):'',s=='v'?kv('r'+i+'.b'):'',v['r'+i+'.p']?'PS':'',v['r'+i+'.f'],v['r'+i+'.n'])})}
+  v.note&&row('NOTE','Eventuali note','','','','','','',v.note);
+  v.fg&&row('FOTO','Foto generali scheda','','','','','',v.fg);v.crit=='1'&&row('FLAG','Elemento critico (§ 3.3)','','sì');v.cond=='1'&&row('FLAG','Condizione critica in atto','','sì');
+ }
+ return '\ufeff'+o.map(r=>r.map(qc).join(';')).join('\r\n');
+}
+function render(){(view=='sch'?sch:view=='cda'?cda:dif)()}
+function dif(){
+ view='dif';ctx=null;cur.d=cur.d||[];scrollTo(0,0);
+ $('h').innerHTML=`<button data-a="back">‹ Elenco</button><h1>${E(cur.name)}</h1><small id="st">Salvato</small>`;
+ $('m').innerHTML=`<details open><summary>Anagrafica (comune a tutte le schede)</summary><div class="in">${inp('strada','Strada di appartenenza')}${inp('km','Progressiva km')}${inp('tecnico','Tecnico rilevatore')}${inp('data','Data ispezione','date')}</div></details>${clUI()}<div class="row"><button class="p" data-a="cda">Classe di attenzione</button><button class="p" data-a="ej">Esporta ponte (JSON)</button><button data-a="ec">Esporta ponte (CSV)</button><button data-a="ez">Esporta con foto (ZIP)</button><button class="p" data-a="epdf">Esporta PDF (schede + foto)</button></div>`+
+ (cur.d.length?cur.d.map(d=>`<div class="pt"><b>${d.s} · ${NM(d.s)}${d.v.n?' · N° '+E(d.v.n):''}</b><span>${prog(d)}</span><button class="p" data-a="os" data-id="${d.id}">Apri</button><button data-a="ej" data-id="${d.id}">JSON</button><button data-a="ec" data-id="${d.id}">CSV</button><button data-a="epdf" data-id="${d.id}">PDF</button><button data-a="ds" data-id="${d.id}">Elimina</button></div>`).join(''):'<p>Nessuna scheda compilata per questo ponte.</p>')+
+ `<details open><summary>Aggiungi scheda</summary><div class="in">${Array.from({length:38},(_,i)=>`<button data-a="add" data-s="${i+1}">${i+1} · ${NM(i+1)}</button>`).join('')}</div></details>`;
+}
+function sch(){
+ view='sch';const d=ctx;scrollTo(0,0);
+ $('h').innerHTML=`<button data-a="back3">‹ Schede</button><h1>${d.s} · ${NM(d.s)}</h1><small id="st">Salvato</small>`;
+ $('m').innerHTML=`<div class="in" style="padding:0 0 8px">${inp('n','N° elemento (es. pila 2)')}${d.s==20?'':`<div class="w"><label>Ai fini della classe di attenzione</label>${cp('crit',[['1','Elemento critico (§ 3.3)']],0,'ps')}${cp('cond',[['1','Condizione critica in atto']],0,'ps')}</div>`}<div class="w">${inp('fg','N° foto generali della scheda')}${phb('fg','Foto generale','')}</div></div>`+(d.s==20?s20():rows(d));
+ fillTh();
+}
+function rows(d){
+ let i=-1;
+ return `<div class="row"><button data-a="allnp">Righe non compilate → Non presente</button></div>`+CAT[d.s].r.map(r=>{
+  if(!Array.isArray(r))return `<h3>${E(r)}</h3>`;
+  i++;const [c,t,g,k1,k2,ps,l1,l2]=r,k='r'+i,s=V(k);
+  let b=`<div class="dr${s?' on':''}"><div class="dh"><span><small>${c}</small><br><b>${E(t)}</b></span><span class="gb">G${g}</span></div>`+cp(k,[['v','Visto'],['np','Non presente'],['nr','Non rilevabile'],['na','Non applicabile']],1);
+  if(s=='v'){b+=ks(k+'.a',k1,l1,'Estensione K1')+ks(k+'.b',k2,l2,'Intensità K2')+(ps?cp(k+'.p',[['1','Pregiudica la statica (PS)']],0,'ps'):'')+inp(k+'.f','N° foto')+phb(k+'.f',t,c)}
+  return b+inp(k+'.n','Note')+'</div>';
+ }).join('')+`<label>Eventuali note<textarea rows="3" data-k="note">${E(V('note'))}</textarea></label>`;
+}
+function s20(){
+ const c=V('caso'),N='inputmode="decimal"';
+ const grp=(p,t,L)=>`<details open><summary>${t}</summary><div class="in">${L.map(([k,l])=>`<div class="w">${ck(p+k,l)}</div>`).join('')}<div>${inp(p+'h','Altezza (cm)','text',N)}</div></div></details>`;
+ let h=`<div class="in" style="padding:0 0 8px">${inp('ncorsie','N° corsie')}${inp('lcarr','Larghezza carreggiata [m]','text',N)}${inp('lmarc','Larghezza marciapiede [m]','text',N)}${inp('hmarc','Altezza marciapiede [m]','text',N)}<div class="w"><label>Marciapiede</label>${cp('marc',[['1','Sì, su un lato'],['2','Sì, su entrambi i lati'],['0','No']],0)}</div><div class="w"><label>Barriere laterali</label>${cp('caso',[['1','Caso 1 – marciapiede assente'],['2','Caso 2 – sormontabile'],['3','Caso 3 – non sormontabile']],1)}</div></div>`;
+ h+=`<details open><summary>Elementi accessori – difetti presenti</summary>`+EL.map(([n,g,t],i)=>(g?`<h3>${g}</h3>`:'')+ck('e'+i,`El.Acc_${n} · ${t}`,1)).join('')+`</details>`;
+ if(c){h+=grp('g.','Guardiavia',c=='3'?[BL[0],['pg','Presente come guardiavia'],['pp','Presente come parapetto'],...BL.slice(1)]:BL);if(c!='1')h+=grp('p.','Parapetto',BL)}
+ return h;
+}
+/* ===== Classe di Attenzione strutturale e fondazionale (LG DM 204/2022, § 4.2) ===== */
+const LVL=['Bassa','Medio-Bassa','Media','Medio-Alta','Alta'],LDF=['Basso','Medio-Basso','Medio','Medio-Alto','Alto'];
+const T46={'Travate appoggiate':{'C.a.':'1234','C.a.p.':'1223','Acciaio':'0123','Metallo (ponti storici)':'1234','Legno':'2344','Misto (acciaio-c.a.)':'1234'},
+'Travate continue / Telaio':{'C.a.':'0123','C.a.p.':'0122','Acciaio':'0012','Metallo (ponti storici)':'0123','Misto (acciaio-c.a.)':'0123'},
+'Arco massiccio':{'Muratura':'0112','C.a.':'0122'},'Arco sottile':{'C.a.':'1223'},
+'Travate Gerber / Ponti a stampella':{'C.a.':'3444','C.a.p.':'3334','Acciaio':'2334','Metallo (ponti storici)':'3344','Misto (acciaio-c.a.)':'3444'},
+'Soletta appoggiata':{'C.a.':'1234'},'Soletta incastrata':{'C.a.':'0123'}};
+// Fig. 4.2: classe finale [schema Bassa..Alta] per livello di difettosità corretto (Basso..Alto)
+const MV=[[0,0,0,1,1],[0,1,1,2,2],[1,2,2,3,3],[2,2,3,3,3],[2,3,3,4,4]];
+const T43={A:[4,4,3],B:[4,3,2],C:[3,2,1],D:[2,1,0],E:[0,0,0]},T48=[[4,3,2],[3,2,1],[2,1,0]];
+// Tab. 4.10: MX[pericolosità Bassa..Alta][vulnerabilità Alta..Bassa][esposizione Alta..Bassa]; B=Bassa b=Medio-Bassa M=Media a=Medio-Alta A=Alta
+const MX=[['AAAAA','aMMMb','MMMbB','MMbBB','bbBBB'],['AAAAA','aaMMM','aMMbb','MMbbB','MbbBB'],['AAAAA','aaaMM','aMMMM','MMMbb','MMbBB'],['AAAAA','AaaaM','aaMMM','MMMbb','MMbbB'],['AAAAA','AAaaa','AaaMM','aMMMM','aMMbb']];
+const num=s=>{const x=parseFloat(String(s??'').replace(',','.'));return isNaN(x)?null:x},c4=n=>Math.max(0,Math.min(4,n));
+const normaCl=(c,y,L)=>{const big=L>=10;if(y<(c=='I'?1952:1990))return['A',''];if(y<=(big?2005:1990))return['B',''];if(y>=(big?2008:2005))return['C',''];return['B','Anno di progetto in un intervallo non coperto dalle LG: assunta classe B (cautelativa)']};
+function calc1(ya,L,yfl,Lfl){
+ const v=cur.v,S=[],W=[],M=[],st=(n,val,det)=>S.push({n,val,det:det||''});
+ const kel=num(v.cl_kel)||1,nel=num(v.cl_nel)||6,SC=(cur.d||[]).filter(d=>d.s!=20&&CAT[d.s]);
+ let dl=null,G3=0;const wh=[];
+ // 1. livello di difettosità (Tab. 4.5)
+ if(!SC.length)M.push('Schede difetti compilate');
+ else{dl=0;SC.forEach(d=>{
+  const nm=d.s+' · '+NM(d.s)+(d.v.n?' · '+d.v.n:''),rows=CAT[d.s].r.filter(Array.isArray);let nc=0,nr=0;
+  if(!d.v.n)W.push('Scheda '+d.s+' senza N° elemento');
+  if(d.v.cond=='1'){dl=4;wh.push([4,nm+': condizione critica in atto'])}
+  rows.forEach((r,i)=>{const s=d.v['r'+i];if(!s){nc++;return}if(s=='nr'&&r[2]>=4)nr++;if(s!='v')return;
+   const g=r[2],a=d.v['r'+i+'.a'],b=d.v['r'+i+'.b'],no=x=>x==null||x==='';
+   if((/1/.test(r[3])&&no(a))||(/1/.test(r[4])&&no(b)))W.push(nm+': «'+r[1]+'» senza K1/K2'+(g>=4?' (K2 mancante: assunta elevata)':''));
+   const k=no(b)?(g>=4?1:.2):[.2,.5,1][b],el=k>=kel,ps=d.v['r'+i+'.p']=='1',crit=d.v.crit=='1'||r[0]=='Ril/Fond_1';
+   if(g<=3){G3++;return}
+   const l=crit?4:el&&ps?3:el?2:g==5?2:1;
+   wh.push([l,nm+': '+r[1]+' (G'+g+', K2 '+String(k).replace('.',',')+')'+(crit?', elemento critico':'')+(ps?', PS':'')]);dl=Math.max(dl,l)});
+  if(nc)W.push(nm+': '+nc+' righe non compilate');
+  if(nr)W.push(nm+': '+nr+' difetti G≥4 non rilevabili: verificare gli elementi critici (§ 3.3)')});
+  if(G3>=nel){dl=Math.max(dl,1);wh.push([1,G3+' difetti G≤3 visti (soglia '+nel+')'])}
+  st('Livello di difettosità',LDF[dl],wh.sort((a,b)=>b[0]-a[0]).slice(0,3).map(x=>x[1]).join(' | ')||'nessun difetto significativo')}
+ // 2. vulnerabilità (Fig. 4.2)
+ const LM=fv(v,'cl_lmed','cl_lmed_f',TB.lmed),Lm=LM.x,nc=num(v.cl_nc),yi=num(v.cl_anno_int),y=yi||ya;let vul=null;
+ if(dl==4){vul=4;st('Vulnerabilità','Alta','difettosità ALTO: vulnerabilità ALTA a prescindere dagli altri fattori')}
+ else if(dl!=null){
+  const sc=[[v.cl_t,v.cl_m],[v.cl_t2,v.cl_m2]].filter(x=>x[0]).map(([t,m])=>{const r=T46[t]&&T46[t][m];return r&&L!=null&&nc!=null?c4(+r[L<=5?0:L<15?1:L<25?2:3]+(nc>3?1:0)):null}).filter(x=>x!=null);
+  let nor=v.cl_nor?[v.cl_nor,'impostata a mano']:null;
+  if(!nor){const yp=num(v.cl_aprog)??ya;if(yp!=null&&L!=null){nor=normaCl(v.cl_cat=='I'?'I':'II',yp,L);
+   if(num(v.cl_aprog)==null)W.push('Anno di progetto non indicato: per la norma è usato l\'anno di costruzione');
+   if(v.cl_cat!='I'&&v.cl_cat!='II')W.push('Categoria di progetto non indicata: assunta 2ª categoria (LG)');
+   if(nor[1])W.push(nor[1])}}
+  if(y==null)M.push('Anno di costruzione (o dell\'ultimo intervento significativo)');
+  if(!sc.length)M.push('Schema statico, materiale, luce della campata più lunga e n° campate');
+  if(!nor)M.push('Anno di progetto o di costruzione, e luce della campata più lunga (norma di progettazione)');
+  if(y!=null&&sc.length&&nor){
+   const r=y<=1945?0:y>=1980?2:1,s0=Math.max(...sc);let a=dl;
+   if(dl>0&&dl<4){if(r==2)a=dl+1;else if(r==0&&dl!=3)a=dl-1}
+   const a1=a;if(a>0&&a<4)a+=nor[0]=='A'?1:nor[0]=='C'?-1:0;
+   vul=MV[a][s0];
+   st('Rapidità di evoluzione del degrado',LDF[a1],(yi?'ultimo intervento '+y:'costruzione '+y+(yfl?' (ipotesi: fascia ortofoto '+yfl+')':''))+' → '+['≤ 1945','1945-1980','≥ 1980'][r]);
+   st('Norma di progettazione',LDF[a],'classe '+nor[0]+(nor[1]?' ('+nor[1]+')':''));
+   st('Schema statico, materiale, luce',LVL[s0],'Tab. 4.6'+(Lfl?' (luce massima: '+Lfl+')':'')+(nc>3?' (+1 livello: più di 3 campate)':'')+(sc.length>1?' (più gravoso tra i due schemi)':''));
+   st('Vulnerabilità',LVL[vul])}}
+ // 3. pericolosità (Tab. 4.3-4.4)
+ let pe=null;const VC=fv(v,'cl_vc','cl_vc_f',TB.vc),vc=VC.x;
+ if(v.cl_str&&vc!=null){const f=vc>=700?0:vc>300?1:2;pe=T43[v.cl_str][f];st('Pericolosità',LVL[pe],'classe stradale '+v.cl_str+', '+(VC.f?'fascia '+{B:'bassa (≤ 300)',M:'media (300–700)',A:'alta (≥ 700)'}[VC.b]+' di veicoli commerciali/giorno per corsia':vc+' veicoli commerciali/giorno per corsia (frequenza '+['alta','media','bassa'][f]+')'))}
+ else M.push('Classe stradale e veicoli commerciali/giorno per corsia');
+ // 4. esposizione (Tab. 4.7-4.8, Fig. 4.3)
+ let es=null;const TG=fv(v,'cl_tgm','cl_tgm_f',TB.tgm),tg=TG.x;
+ if(tg!=null&&Lm!=null&&v.cl_ente){
+  let e=T48[Lm>50?0:Lm>20?1:2][tg>=25000?0:tg>10000?1:2];const e0=e;
+  if(v.cl_ped=='1')e=c4(e+1);
+  if(v.cl_alt!='P')e=c4(e+1);
+  if(!v.cl_alt)W.push('Alternative stradali non indicate: assunta assenza (cautelativa)');
+  es=c4(e+{A:1,M:0,B:-1}[v.cl_ente]);
+  st('Esposizione',LVL[es],(TG.f?'TGM in fascia '+{B:'bassa (≤ 10.000)',M:'media (10.000–25.000)',A:'alta (≥ 25.000)'}[TG.b]:'TGM '+tg)+', luce media '+(LM.f?'in fascia '+{P:'piccola (≤ 20 m)',M:'media (20–50 m)',G:'grande (> 50 m)'}[LM.b]:Lm+' m')+' → '+LVL[e0]+(v.cl_ped=='1'?'; +1 pedoni':'')+'; alternative '+(v.cl_alt=='P'?'presenti':'assenti')+'; ente scavalcato '+{A:'alta',M:'media',B:'bassa'}[v.cl_ente])}
+ else M.push('TGM, luce media delle campate ed ente scavalcato');
+ if(v.cl_mp=='1')st('Merci pericolose','Sì','non cambia la classe: priorità più alta tra ponti della stessa classe');
+ let cda=null;
+ if(pe!=null&&vul!=null&&es!=null){cda='BbMaA'.indexOf(MX[pe][4-vul][4-es]);st('Classe di attenzione strutturale e fondazionale',LVL[cda].toUpperCase(),'Tab. 4.10')}
+ return{S,W,M,cda}}
+/* ===== V_02_00: valori precisi oppure fasce delle Linee Guida; scenari multipli per le fasce a cavallo di una soglia ===== */
+const TB={vc:{B:150,M:500,A:800},tgm:{B:5000,M:17500,A:30000},lmed:{P:10,M:35,G:60},lmax:{'0':3,'1':9,'2':20,'3':30}}; // valori rappresentativi di ogni fascia
+const LB={'0':'≤ 5 m','1':'5–15 m','2':'15–25 m','3':'≥ 25 m'};
+const fv=(v,k,kf,t)=>{const x=num(v[k]);if(x!=null)return{x,f:false};const b=v[kf];return b&&t[b]!=null?{x:t[b],f:true,b}:{x:null,f:false}};
+// Fasce d'anno da ortofoto: [ultima carta senza il ponte, prima carta con il ponte]; estremi inclusi
+const AF=[{l:'già presente nel 1954',lo:1940,hi:1954},{l:'1954–1978',lo:1954,hi:1978},{l:'1978–1988',lo:1978,hi:1988},{l:'1988–1996',lo:1988,hi:1996},{l:'1996–2004',lo:1996,hi:2004},{l:'2004–2005',lo:2004,hi:2005},{l:'2005–2007',lo:2005,hi:2007},{l:'2007–2010',lo:2007,hi:2010},{l:'dopo il 2010',lo:2010,hi:new Date().getFullYear()}];
+function calcCdA(){
+ const v=cur.v,ya0=num(v.cl_anno),fi=v.cl_anno_f,fa=ya0==null&&fi!=null&&fi!==''&&AF[+fi]?AF[+fi]:null;
+ const Ys=fa?(fa.lo==fa.hi?[fa.lo]:[fa.lo,fa.hi]):[ya0];
+ const Lp=num(v.cl_lmax),lb=v.cl_lmax_f;let Ls;
+ if(Lp!=null)Ls=[[Lp,'']];
+ else if(lb&&TB.lmax[lb]!=null)Ls=lb=='1'?[[9,'fascia '+LB[lb]+', ipotesi sotto 10 m'],[12,'fascia '+LB[lb]+', ipotesi 10 m o più']]:[[TB.lmax[lb],'fascia '+LB[lb]]];
+ else Ls=[[null,'']];
+ const sc=[];
+ Ys.forEach(y=>Ls.forEach(([L,lt])=>{const r=calc1(y,L,fa?fa.l:'',lt);r.hyp=[];if(Ys.length>1)r.hyp.push('anno di costruzione '+y);if(Ls.length>1)r.hyp.push('luce massima: '+lt);sc.push(r)}));
+ const G=[];sc.forEach(r=>{let g=G.find(x=>x.cda===r.cda);if(!g){g={cda:r.cda,sc:[]};G.push(g)}g.sc.push(r)});
+ G.sort((a,b)=>(a.cda==null?9:a.cda)-(b.cda==null?9:b.cda));
+ const U=k=>[...new Set(sc.flatMap(r=>r[k]))],W=U('W'),M=U('M');
+ if(fa)W.unshift('Anno di costruzione stimato dalla fascia ortofoto «'+fa.l+'»: calcolo con gli estremi '+Ys.join(' e ')+' (un valore preciso, se inserito, ha la precedenza)');
+ const ok=G.filter(g=>g.cda!=null);let cda=null,pend=false;
+ if(ok.length==1)cda=ok[0].cda;else if(ok.length>1){const g=ok.find(g=>String(g.cda)===String(v.cl_scelta));if(g)cda=g.cda;else pend=true}
+ return{G,ok,W,M,cda,pend,fa,Ys}}
+const clUI=()=>{const N='inputmode="decimal"',I='inputmode="numeric"',yn=k=>cp(k,[['1','Sì'],['0','No']],0),
+ du=(k,l,x,kf,o,nt)=>`<div class="w dd">${inp(k,l+' · valore preciso, se noto','text',x)}<label>oppure fascia (se il valore preciso non è noto)</label>${cp(kf,o,0)}${nt?`<small>${nt}</small>`:''}</div>`,
+ sm=(a,b)=>`<label>Schema statico</label>${cp(a,Object.keys(T46).map(x=>[x,x]),1)}${V(a)&&T46[V(a)]?`<label>Materiale dell’impalcato</label>${cp(b,Object.keys(T46[V(a)]).map(x=>[x,x]),1)}`:''}`;
+ return `<details><summary>Dati per la classificazione (CdA strutturale e fondazionale)</summary><div class="in">
+<div class="w">${sm('cl_t','cl_m')}</div>
+<div class="w"><details><summary>Secondo schema (se il ponte ne ha di diversi)</summary><div class="in"><div class="w">${sm('cl_t2','cl_m2')}</div></div></details></div>
+${du('cl_lmax','Luce della campata più lunga [m]',N,'cl_lmax_f',[['0','≤ 5 m'],['1','5–15 m'],['2','15–25 m'],['3','≥ 25 m']])}
+${du('cl_lmed','Luce media delle campate [m]',N,'cl_lmed_f',[['P','Piccola · ≤ 20 m'],['M','Media · 20–50 m'],['G','Grande · > 50 m']])}
+${inp('cl_nc','N° campate','text',I)}
+${du('cl_anno','Anno di costruzione',I,'cl_anno_f',AF.map((a,i)=>[String(i),a.l]),'Fasce ricavate dalle ortofoto: intervallo tra l\u2019ultima carta senza il ponte e la prima carta con il ponte.')}
+${inp('cl_anno_int','Anno ultimo intervento significativo (se documentato)','text',I)}
+<div class="w"><label>Categoria di progetto</label>${cp('cl_cat',[['I','1ª categoria'],['II','2ª categoria']],0)}</div>
+${inp('cl_aprog','Anno di progetto (norme applicate)','text',I)}
+<div class="w"><label>Norma di progettazione (se nota, sostituisce il calcolo automatico)</label>${cp('cl_nor',[['A','Classe A'],['B','Classe B'],['C','Classe C']],0)}</div>
+<div class="w"><label>Classe stradale (limitazione di carico)</label>${cp('cl_str',[['A','A · carichi NTC'],['B','B · 44 t'],['C','C · 26 t'],['D','D · 8 t'],['E','E · 3,5 t']],0)}</div>
+${du('cl_vc','Veicoli commerciali/giorno per corsia',I,'cl_vc_f',[['B','Bassa · ≤ 300'],['M','Media · 300–700'],['A','Alta · ≥ 700']])}
+${du('cl_tgm','TGM veicoli/giorno (intera carreggiata)',I,'cl_tgm_f',[['B','Bassa · ≤ 10.000'],['M','Media · 10.000–25.000'],['A','Alta · ≥ 25.000']])}
+<div class="w"><label>Alternative stradali adeguate</label>${cp('cl_alt',[['P','Presenti'],['A','Assenti']],0)}</div>
+<div class="w"><label>Ente scavalcato</label>${cp('cl_ente',[['A','Alta · ferrovia, zona edificata, strada primaria'],['M','Media · strada secondaria, corso d’acqua'],['B','Bassa · depressione del terreno']],0)}</div>
+<div class="w"><label>Frequente transito di pedoni (marciapiedi, centro abitato)</label>${yn('cl_ped')}</div>
+<div class="w"><label>Trasporto merci pericolose non occasionale</label>${yn('cl_mp')}</div>
+${inp('cl_kel','Convenzione: K2 «elevata» se ≥ (0,5 oppure 1)','text',N)}${inp('cl_nel','Convenzione: n° difetti G≤3 che valgono «numero elevato»','text',I)}
+</div></details>`};
+function cda(){
+ view='cda';ctx=null;scrollTo(0,0);const R=calcCdA(),li=a=>a.length?'<ul>'+a.map(x=>`<li>${E(x)}</li>`).join('')+'</ul>':'',N=x=>LVL[x].toUpperCase(),hy=g=>g.sc.map(r=>r.hyp.join(', ')).filter(Boolean).join(' · '),
+ tb=S=>`<div class="tb"><table><tr><th>Passaggio</th><th>Risultato</th><th>Dettaglio</th></tr>${S.map(s=>`<tr><th>${E(s.n)}</th><td><b>${E(s.val)}</b></td><td>${E(s.det)}</td></tr>`).join('')}</table></div>`;
+ $('h').innerHTML=`<button data-a="backc">‹ Schede</button><h1>CdA · ${E(cur.name)}</h1><small id="st">Salvato</small>`;
+ let h=`<div class="row"><button class="p" data-a="ecda">Esporta CSV</button><button data-a="prn">Stampa / PDF</button></div>`;
+ if(R.cda!=null)h+=`<div class="pt"><b style="font-size:21px">CdA strutturale e fondazionale: ${N(R.cda)}</b></div>`+(R.ok.length>1?`<p>Risultato scelto dal tecnico. Alternative: ${R.ok.filter(g=>g.cda!=R.cda).map(g=>N(g.cda)).join(', ')}.</p>`:'');
+ else if(R.pend)h+=`<div class="pt"><b style="font-size:21px">CdA: ${R.ok.map(g=>N(g.cda)).join(' oppure ')}</b></div><p><b>Da decidere:</b> i dati stimati a fascia danno risultati diversi a seconda dell’ipotesi. Scegli il risultato da adottare.</p>`;
+ else h+=`<div class="pt"><b>CdA non calcolabile: mancano dei dati</b></div>`;
+ if(R.ok.length>1)h+=`<label>Risultato adottato</label>${cp('cl_scelta',R.ok.map(g=>[String(g.cda),N(g.cda)]),1)}`;
+ if(R.M.length)h+='<h3>Dati mancanti</h3>'+li(R.M);
+ if(R.ok.length>1)R.ok.forEach(g=>{h+=`<h3>CdA ${N(g.cda)} · ${E(hy(g))}</h3>`+tb(g.sc[0].S)});
+ else{const g=R.ok[0]||R.G[0];h+=tb(g.sc[0].S);if(g.sc.length>1&&hy(g))h+=`<p><small>Stesso risultato per tutte le ipotesi: ${E(hy(g))}.</small></p>`}
+ if(R.W.length)h+='<h3>Avvisi</h3>'+li(R.W);
+ h+=`<p><small>Calcolo secondo le Linee Guida (DM 204/2022) § 4.2, Tab. 4.3-4.10 e Fig. 4.2-4.3. Il livello di difettosità usa le convenzioni indicate nei dati di classificazione: è una proposta da verificare dal tecnico. Per i dati inseriti a fascia il calcolo usa gli estremi della fascia; se i risultati differiscono la scelta spetta al tecnico.</small></p>`;
+ $('m').innerHTML=h}
+/* ===== Foto dei difetti: archivio separato (IndexedDB 'f'), numerazione progressiva per ponte ===== */
+const FMAX=1600; // lato massimo in px delle foto salvate
+const phb=(k,d,c)=>{const a=`data-ph="${k}" data-d="${E(d)}" data-c="${E(c||'')}"`;return `<div class="ph"><button type="button" class="c" onclick="this.parentNode.children[2].click()">📷 Scatta</button><button type="button" class="c" onclick="this.parentNode.children[3].click()">Galleria</button><input type="file" accept="image/*" capture="environment" hidden ${a}><input type="file" accept="image/*" hidden ${a}></div><div class="th" data-th="${k}"></div>`};
+const listF=pid=>tx('readonly',s=>s.getAll(IDBKeyRange.bound(pid+'|',pid+'|\uffff')),'f');
+const capOf=r=>{const d=cur.d.find(x=>x.id==r.sid),s=d?d.s:r.s,el=d?d.v.n||'':r.el;return 'Scheda '+s+' · '+NM(s)+(el?' – '+el:'')+' – '+r.d};
+const shrink=(b,m,q)=>{const s=Math.min(1,m/Math.max(b.width,b.height)),c=document.createElement('canvas');c.width=Math.round(b.width*s);c.height=Math.round(b.height*s);c.getContext('2d').drawImage(b,0,0,c.width,c.height);return c};
+async function addFoto(k,d,c,file){
+ const b=await createImageBitmap(file),big=shrink(b,FMAX),bl=await new Promise(r=>big.toBlob(r,'image/jpeg',.82)),th=shrink(b,240).toDataURL('image/jpeg',.6);
+ const L=await listF(cur.id),nn=Math.max(+cur.v.fcnt||0,...L.map(r=>+r.n))+1,n=String(nn).padStart(3,'0');cur.v.fcnt=nn;
+ await tx('readwrite',s=>s.put({id:cur.id+'|'+n,n,b:bl,t:th,sid:ctx.id,s:ctx.s,el:ctx.v.n||'',k,c,d,ts:new Date().toISOString()},cur.id+'|'+n),'f');
+ const v=String(ctx.v[k]||'').trim();ctx.v[k]=v?v+', '+n:n;await put(cur);keep(render)}
+async function fillTh(){
+ const E1=[...document.querySelectorAll('[data-th]')];if(!E1.length||!cur)return;
+ const M=new Map((await listF(cur.id)).map(r=>[r.n,r]));
+ E1.forEach(el=>{el.innerHTML=(String(X().v[el.dataset.th]||'').match(/\d+/g)||[]).map(t=>M.get(t.padStart(3,'0'))).filter(Boolean).map(r=>`<img src="${r.t}" data-a="fv" data-n="${r.n}" alt="foto ${r.n}">`).join('')})}
+const crcT=(()=>{const t=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+const crc32=u=>{let c=-1;for(let i=0;i<u.length;i++)c=crcT[(c^u[i])&255]^(c>>>8);return(c^-1)>>>0};
+function zipBlob(files){
+ const enc=new TextEncoder(),P=[],C=[];let off=0;
+ for(const f of files){const nm=enc.encode(f.n),c=crc32(f.d),z=f.d.length,h=new DataView(new ArrayBuffer(30)),e=new DataView(new ArrayBuffer(46));
+  h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(12,0x21,true);h.setUint32(14,c,true);h.setUint32(18,z,true);h.setUint32(22,z,true);h.setUint16(26,nm.length,true);
+  e.setUint32(0,0x02014b50,true);e.setUint16(4,20,true);e.setUint16(6,20,true);e.setUint16(8,0x0800,true);e.setUint16(14,0x21,true);e.setUint32(16,c,true);e.setUint32(20,z,true);e.setUint32(24,z,true);e.setUint16(28,nm.length,true);e.setUint32(42,off,true);
+  P.push(h.buffer,nm,f.d);C.push(e.buffer,nm);off+=30+nm.length+z}
+ const cs=C.reduce((a,x)=>a+x.byteLength,0),t=new DataView(new ArrayBuffer(22));
+ t.setUint32(0,0x06054b50,true);t.setUint16(8,files.length,true);t.setUint16(10,files.length,true);t.setUint32(12,cs,true);t.setUint32(16,off,true);
+ return new Blob([...P,...C,t.buffer],{type:'application/zip'})}
+const dlz=async(bl,n)=>{const u=URL.createObjectURL(bl),l=document.createElement('a');l.href=u;l.download=n;l.click();if(navigator.share&&navigator.canShare){const f=new File([bl],n,{type:'application/zip'});if(navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:n})}catch(e){}}}};
+async function expZip(){
+ const F=(await listF(cur.id)).sort((a,b)=>a.n-b.n);if(!F.length){alert('Nessuna foto per questo ponte');return}
+ const sf=t=>String(t||'').replace(/[^\w-]+/g,'_').slice(0,30),enc=new TextEncoder(),fl=[],o=[['n_foto','file','scheda','tipo','n_elemento','codice','descrizione','data_ora','didascalia']];
+ for(const r of F){const d=cur.d.find(x=>x.id==r.sid),s=d?d.s:r.s,el=d?d.v.n||'':r.el,fn=r.n+'_sch'+s+(el?'-'+sf(el):'')+'_'+sf(r.c||r.d)+'.jpg';
+  fl.push({n:'foto/'+fn,d:new Uint8Array(await r.b.arrayBuffer())});o.push([r.n,fn,s,NM(s),el,r.c,r.d,r.ts,capOf(r)])}
+ fl.push({n:'foto.csv',d:enc.encode('\ufeff'+o.map(r=>r.map(qc).join(';')).join('\r\n'))});
+ const L=cur.d.filter(compiled);if(L.length)fl.push({n:'difetti.csv',d:enc.encode(csv(cur,L))});
+ dlz(zipBlob(fl),'ponte_foto_'+sf(cur.name)+'.zip')}
+/*PDFX-BEGIN*/
+/* ===== Esportazione PDF delle schede (+ allegato fotografico). Generatore PDF minimale, senza librerie, funziona offline ===== */
+const PDFX=(()=>{
+const PWD=[278, 278, 355, 556, 556, 889, 667, 191, 333, 333, 389, 584, 278, 333, 278, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 278, 278, 584, 584, 584, 556, 1015, 667, 667, 722, 722, 667, 611, 778, 722, 278, 500, 667, 556, 833, 722, 778, 667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 278, 278, 278, 469, 556, 333, 556, 556, 500, 556, 556, 278, 556, 556, 222, 222, 500, 222, 833, 556, 556, 556, 556, 333, 500, 278, 556, 500, 722, 500, 500, 500, 334, 260, 334, 584, 761, 556, 556, 222, 556, 333, 1000, 556, 556, 333, 1000, 667, 333, 1000, 556, 611, 556, 556, 222, 222, 333, 333, 350, 556, 1000, 333, 1000, 500, 333, 944, 556, 500, 667, 278, 333, 556, 556, 556, 556, 260, 556, 333, 737, 370, 556, 584, 333, 737, 333, 400, 584, 333, 333, 333, 556, 537, 278, 333, 333, 365, 556, 834, 834, 834, 611, 667, 667, 667, 667, 667, 667, 1000, 722, 667, 667, 667, 667, 278, 278, 278, 278, 722, 722, 778, 778, 778, 778, 778, 584, 778, 722, 722, 722, 722, 667, 667, 611, 556, 556, 556, 556, 556, 556, 889, 500, 556, 556, 556, 556, 278, 278, 278, 278, 556, 556, 556, 556, 556, 556, 556, 584, 611, 556, 556, 556, 556, 500, 556, 500],PBD=[278, 333, 474, 556, 556, 889, 722, 238, 333, 333, 389, 584, 278, 333, 278, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 333, 333, 584, 584, 584, 611, 975, 722, 722, 722, 722, 667, 611, 778, 722, 278, 556, 722, 611, 833, 722, 778, 667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 333, 278, 333, 584, 556, 333, 556, 611, 556, 611, 556, 333, 611, 611, 278, 278, 556, 278, 889, 611, 611, 611, 611, 389, 556, 333, 611, 556, 778, 556, 556, 500, 389, 280, 389, 584, 761, 556, 611, 278, 556, 500, 1000, 556, 556, 333, 1000, 667, 333, 1000, 611, 611, 611, 611, 278, 278, 500, 500, 350, 556, 1000, 333, 1000, 556, 333, 944, 611, 500, 667, 278, 333, 556, 556, 556, 556, 280, 556, 333, 737, 370, 556, 584, 333, 737, 333, 400, 584, 333, 333, 333, 611, 556, 278, 333, 333, 365, 556, 834, 834, 834, 611, 722, 722, 722, 722, 722, 722, 1000, 722, 667, 667, 667, 667, 278, 278, 278, 278, 722, 722, 778, 778, 778, 778, 778, 584, 778, 722, 722, 722, 722, 667, 667, 611, 556, 556, 556, 556, 556, 556, 889, 556, 556, 556, 556, 556, 278, 278, 278, 278, 611, 611, 611, 611, 611, 611, 611, 584, 611, 611, 611, 611, 611, 556, 611, 556];
+const WM={'Helvetica':PWD,'Helvetica-Oblique':PWD,'Helvetica-Bold':PBD,'Helvetica-BoldOblique':PBD};
+const FN=['Helvetica','Helvetica-Bold','Helvetica-BoldOblique','Helvetica-Oblique'];
+const W1252={0x20AC:0x80,0x201A:0x82,0x0192:0x83,0x201E:0x84,0x2026:0x85,0x2020:0x86,0x2021:0x87,0x02C6:0x88,0x2030:0x89,0x0160:0x8A,0x2039:0x8B,0x0152:0x8C,0x017D:0x8E,0x2018:0x91,0x2019:0x92,0x201C:0x93,0x201D:0x94,0x2022:0x95,0x2013:0x96,0x2014:0x97,0x02DC:0x98,0x2122:0x99,0x0161:0x9A,0x203A:0x9B,0x0153:0x9C,0x017E:0x9E,0x0178:0x9F};
+const cc=ch=>{const u=ch.charCodeAt(0);return u<128||(u>=160&&u<256)?u:(W1252[u]||63)};
+const sw=(s,f,z)=>{const t=WM[f];let w=0;for(let i=0;i<s.length;i++){const k=cc(s[i]);w+=k>=32?t[k-32]:0}return w*z/1000};
+const rgb=h=>[1,3,5].map(i=>(parseInt(h.substr(i,2),16)/255).toFixed(3)).join(' ');
+const n2=x=>String(+x.toFixed(2));
+const hex=s=>{let o='';for(let i=0;i<s.length;i++)o+=cc(s[i]).toString(16).padStart(2,'0');return o};
+function jpegInfo(u){let i=2;while(i<u.length-9){if(u[i]!==0xFF){i++;continue}const m=u[i+1];if(m===0xD8||m===0x01||m===0xFF||(m>=0xD0&&m<=0xD7)){i+=m===0xFF?1:2;continue}const L=(u[i+2]<<8)|u[i+3];if(m>=0xC0&&m<=0xCF&&m!==0xC4&&m!==0xC8&&m!==0xCC)return{h:(u[i+5]<<8)|u[i+6],w:(u[i+7]<<8)|u[i+8],n:u[i+9]};i+=2+L}throw new Error('JPEG non valido')}
+
+/* --- documento PDF --- */
+const PGW=841.8897637795277,PGH=595.2755905511812;
+function Doc(){
+ const pages=[],imgs=[];let ops=['0 g 0 G 1 w'],fnt='Helvetica',fsz=10;
+ const txt=(x,y,t)=>ops.push(`BT /F${FN.indexOf(fnt)} ${n2(fsz)} Tf ${n2(x)} ${n2(y)} Td <${hex(String(t))}> Tj ET`);
+ const c={
+  setFillColor:h=>ops.push(rgb(h)+' rg'),
+  setStrokeColor:h=>ops.push(rgb(h)+' RG'),
+  setLineWidth:w=>ops.push(n2(w)+' w'),
+  rect:(x,y,w,h,st=1,fl=0)=>ops.push(`${n2(x)} ${n2(y)} ${n2(w)} ${n2(h)} re ${fl&&st?'B':fl?'f':st?'S':'n'}`),
+  line:(a,b,x,y)=>ops.push(`${n2(a)} ${n2(b)} m ${n2(x)} ${n2(y)} l S`),
+  setFont:(f,s)=>{fnt=f;fsz=s},
+  drawString:(x,y,t)=>txt(x,y,t),
+  drawCentredString:(x,y,t)=>txt(x-sw(String(t),fnt,fsz)/2,y,t),
+  drawRightString:(x,y,t)=>txt(x-sw(String(t),fnt,fsz),y,t),
+  stringWidth:(t,f,s)=>sw(String(t),f,s),
+  drawImage:(i,x,y,w,h)=>ops.push(`q ${n2(w)} 0 0 ${n2(h)} ${n2(x)} ${n2(y)} cm /Im${i} Do Q`),
+  showPage:()=>{pages.push(ops.join('\n'));ops=['0 g 0 G 1 w']}
+ };
+ const addImage=u=>{const i=jpegInfo(u);imgs.push({u,w:i.w,h:i.h,n:i.n});return imgs.length-1};
+ const imgSize=i=>[imgs[i].w,imgs[i].h];
+ const finish=title=>{
+  if(ops.length>1)pages.push(ops.join('\n'));
+  const enc=new TextEncoder(),parts=[],offs=[];let off=0;
+  const w=x=>{const b=typeof x=='string'?enc.encode(x):x;parts.push(b);off+=b.length};
+  const obj=(id,fn)=>{offs[id]=off;w(id+' 0 obj\n');fn();w('\nendobj\n')};
+  const nI=imgs.length,P=pages.length,base=5+nI,root=base+2*P,cat=root+1,info=root+2;
+  w('%PDF-1.4\n');
+  FN.forEach((f,i)=>obj(i+1,()=>w(`<< /Type /Font /Subtype /Type1 /BaseFont /${f} /Encoding /WinAnsiEncoding >>`)));
+  imgs.forEach((im,i)=>obj(5+i,()=>{w(`<< /Type /XObject /Subtype /Image /Width ${im.w} /Height ${im.h} /ColorSpace /${im.n==1?'DeviceGray':'DeviceRGB'} /BitsPerComponent 8 /Filter /DCTDecode /Length ${im.u.length} >>\nstream\n`);w(im.u);w('\nendstream')}));
+  const res=`<< /Font << ${FN.map((f,i)=>`/F${i} ${i+1} 0 R`).join(' ')} >> /XObject << ${imgs.map((_,i)=>`/Im${i} ${5+i} 0 R`).join(' ')} >> >>`;
+  pages.forEach((p,k)=>{const cid=base+2*k,pid=cid+1,b=enc.encode(p);
+   obj(cid,()=>{w(`<< /Length ${b.length} >>\nstream\n`);w(b);w('\nendstream')});
+   obj(pid,()=>w(`<< /Type /Page /Parent ${root} 0 R /MediaBox [0 0 ${n2(PGW)} ${n2(PGH)}] /Resources ${res} /Contents ${cid} 0 R >>`))});
+  obj(root,()=>w(`<< /Type /Pages /Count ${P} /Kids [${pages.map((_,k)=>`${base+2*k+1} 0 R`).join(' ')}] >>`));
+  obj(cat,()=>w(`<< /Type /Catalog /Pages ${root} 0 R >>`));
+  obj(info,()=>w(`<< /Title (${String(title||'Schede difetti').replace(/[^\x20-\x7E]/g,'').replace(/[()\\]/g,'')}) /Producer (Ispezioni ponti) >>`));
+  const xo=off,N=info+1;
+  w(`xref\n0 ${N}\n0000000000 65535 f \n`);
+  for(let i=1;i<N;i++)w(String(offs[i]).padStart(10,'0')+' 00000 n \n');
+  w(`trailer\n<< /Size ${N} /Root ${cat} 0 R /Info ${info} 0 R >>\nstartxref\n${xo}\n%%EOF`);
+  return new Blob(parts,{type:'application/pdf'})};
+ return{c,addImage,imgSize,finish}}
+
+/* --- grafica schede (porting dello script di prova) --- */
+const W=PGW,H=PGH,M=26,ROWH=15,BK='#000000',GR='#444444',GY='#cfcfcf',YE='#fbe7ad',HD='#e6e6e6',RD='#f6d5d5',DK='#555555';
+const TITOLO='Scheda Ispezione Ponti di Livello 1';
+const COLS=[62,136,14,20,25,25,25,25,25,25,16,16,16,16,80,0];
+COLS[15]=W-2*M-COLS.reduce((a,b)=>a+b,0);
+const CX=[M];COLS.forEach(w=>CX.push(CX[CX.length-1]+w));
+const dataIt=s=>{const p=String(s||'').split('-');return p.length==3?p[2]+'/'+p[1]+'/'+p[0]:String(s||'')};
+function cross(c,x0,x1,y0,y1,bold=true){c.setStrokeColor(BK);c.setLineWidth(bold?1.3:.8);const p=4;c.line(x0+p,y0+p,x1-p,y1-p);c.line(x0+p,y1-p,x1-p,y0+p)}
+function cell(c,i,y,h,fill){if(fill){c.setFillColor(fill);c.rect(CX[i],y,CX[i+1]-CX[i],h,0,1)}c.setStrokeColor(GR);c.setLineWidth(.5);c.rect(CX[i],y,CX[i+1]-CX[i],h,1,0)}
+function tf(c,s,x,y,w,font='Helvetica',size=7.5,min=5.5){s=String(s??'');while(size>min&&c.stringWidth(s,font,size)>w-4)size-=.25;while(s.length>1&&c.stringWidth(s,font,size)>w-4)s=s.slice(0,-1);c.setFont(font,size);c.drawString(x+2,y,s)}
+
+function intestazione(c,d,ponte){
+ const v=ponte.v||{},dv=d.v||{},y=H-M;
+ c.setFillColor(BK);c.setFont('Helvetica-Bold',14);c.drawString(M,y-12,TITOLO);
+ c.setStrokeColor(BK);c.setLineWidth(1);c.rect(W-M-34,y-22,34,24);
+ c.setFont('Helvetica-Bold',16);c.drawCentredString(W-M-17,y-16,String(d.s));
+ const yy=y-54;
+ c.setFillColor(YE);c.setStrokeColor(GR);c.setLineWidth(.6);c.rect(M,yy-9,CX[16]-M,42,1,1);
+ c.setFillColor(BK);c.setFont('Helvetica-Bold',11);c.drawString(M+3,y-33,NM(d.s)+'   N° '+(dv.n||'_____'));
+ const campi=[['Ponte',ponte.name||''],['Strada di appartenenza',v.strada||''],['Progressiva km',v.km||''],['Tecnico rilevatore',v.tecnico||''],['Data ispezione',dataIt(v.data)]];
+ const xs=[M,M+110,M+270,M+360,M+470],ws=[105,155,85,105,70];
+ campi.forEach(([lab,val],i)=>{const x=xs[i],w=ws[i];
+  c.setFont('Helvetica',6.5);c.setFillColor(DK);c.drawString(x,yy+9,lab);
+  c.setFillColor(BK);tf(c,val,x-2,yy-2,w,'Helvetica',9);
+  c.setStrokeColor(GR);c.setLineWidth(.4);c.line(x,yy-5,x+w-4,yy-5)});
+ return yy-16}
+
+function testata(c,y){
+ const h=26,yb=y-h;for(let i=0;i<16;i++)cell(c,i,yb,h,HD);
+ c.setFillColor(BK);
+ const ctr=(i,s,yy,size=7)=>{c.setFont('Helvetica-Bold',size);c.drawCentredString((CX[i]+CX[i+1])/2,yy,s)};
+ ctr(0,'Codice difetto',yb+10);ctr(1,'Descrizione difetto',yb+10);ctr(2,'G',yb+10);ctr(3,'visto',yb+10,6.5);
+ [[4,7,'Estensione K1'],[7,10,'Intensità K2']].forEach(([a,b,t])=>{
+  c.setFillColor(HD);c.rect(CX[a],yb+13,CX[b]-CX[a],13,0,1);c.setStrokeColor(GR);c.rect(CX[a],yb+13,CX[b]-CX[a],13,1,0);
+  c.setFillColor(BK);c.setFont('Helvetica-Bold',7);c.drawCentredString((CX[a]+CX[b])/2,yb+16.5,t);
+  for(let j=0;j<3;j++){c.setFont('Helvetica-Bold',7);c.drawCentredString((CX[a+j]+CX[a+j+1])/2,yb+4,KV[j])}});
+ ['PS','NA','NR','NP','N° foto'].forEach((s,k)=>ctr(10+k,s,yb+10,k<4?6.5:6));
+ ctr(15,'Note',yb+10);return yb}
+
+function riga(c,y,r,v,k){
+ const [cod,desc,g,m1,m2,ps,l1,l2]=r,h=ROWH,yb=y-h,st=v[k],fill=g==5?RD:null;
+ for(let i=0;i<16;i++)cell(c,i,yb,h,fill);
+ c.setFillColor(BK);
+ tf(c,cod,CX[0],yb+5.5,CX[1]-CX[0],'Helvetica',6.5);
+ tf(c,desc,CX[1],yb+5.5,CX[2]-CX[1],g==5?'Helvetica-Bold':'Helvetica',7.5);
+ c.setFont('Helvetica-Bold',8);c.drawCentredString((CX[2]+CX[3])/2,yb+5.5,String(g));
+ [[4,m1,l1],[7,m2,l2]].forEach(([base,mask,lab])=>{for(let j=0;j<3;j++){const i=base+j;
+  if(mask[j]!='1')cell(c,i,yb,h,GY);
+  else if(lab){c.setFillColor(DK);c.setFont('Helvetica',5.5);c.drawCentredString((CX[i]+CX[i+1])/2,yb+10.5,lab[j]);c.setFillColor(BK)}}});
+ if(!ps)cell(c,10,yb,h,GY);
+ if(st=='v'){cross(c,CX[3],CX[4],yb,y);
+  [[4,k+'.a'],[7,k+'.b']].forEach(([base,key])=>{const val=v[key];if(val!=null&&val!==''){const j=+val;cross(c,CX[base+j],CX[base+j+1],yb,y)}});
+  if(v[k+'.p']=='1')cross(c,CX[10],CX[11],yb,y)}
+ [['na',11],['nr',12],['np',13]].forEach(([s,i])=>{if(st==s)cross(c,CX[i],CX[i+1],yb,y)});
+ c.setFillColor(BK);
+ if(v[k+'.f'])tf(c,v[k+'.f'],CX[14],yb+5.5,CX[15]-CX[14],'Helvetica',7);
+ if(v[k+'.n'])tf(c,v[k+'.n'],CX[15],yb+5.5,CX[16]-CX[15],'Helvetica',7);
+ return yb}
+
+function sottotitolo(c,y,t){const h=13,yb=y-h;c.setFillColor(HD);c.rect(CX[0],yb,CX[16]-CX[0],h,0,1);c.setStrokeColor(GR);c.setLineWidth(.5);c.rect(CX[0],yb,CX[16]-CX[0],h,1,0);c.setFillColor(BK);c.setFont('Helvetica-BoldOblique',7.5);c.drawString(CX[0]+3,yb+3.5,t);return yb}
+
+function piede(c,d,y){
+ const dv=d.v||{},fl=[];
+ if(dv.crit=='1')fl.push('ELEMENTO CRITICO (§ 3.3 Linee Guida)');
+ if(dv.cond=='1')fl.push('CONDIZIONE CRITICA IN ATTO');
+ const hn=46,need=hn+62;if(y-need<M)return false;
+ c.setFillColor(BK);c.setFont('Helvetica-Bold',8);c.drawString(M,y-12,'Eventuali note');
+ c.setStrokeColor(BK);c.setLineWidth(1);c.rect(M,y-12-hn+4,CX[16]-M,hn-4);
+ c.setFont('Helvetica',8);let ty=y-24;
+ fl.concat(dv.note?[dv.note]:[]).forEach(t=>String(t).split('\n').forEach(ln=>{c.drawString(M+4,ty,ln.slice(0,140));ty-=10}));
+ if(dv.fg)c.drawString(M+4,ty,'Foto generali: '+dv.fg);
+ let yl=y-12-hn-4;c.setFont('Helvetica',6.8);
+ ["PS  spuntare se si ritiene che la presenza del difetto possa compromettere la statica dell'opera. Associato ai soli difetti di gravità 4 e 5.",
+  'NA  spuntare se il difetto non è applicabile alla tipologia di manufatto in esame.',
+  'NR  spuntare se il difetto non si può rilevare mediante ispezione visiva (es. vegetazione invasiva, zone non accessibili).',
+  'NP  spuntare se il difetto non è stato rilevato.',
+  'N° foto: numerazione digitale delle foto relative allo specifico difetto (catalogate, numerate e con didascalia).'].forEach(t=>{c.drawString(M,yl,t);yl-=9});
+ return true}
+
+function scheda(c,ponte,d){
+ const cd=CAT[d.s],v=d.v||{};
+ let y=testata(c,intestazione(c,d,ponte)),i=-1;
+ cd.r.forEach(r=>{
+  if(!Array.isArray(r)){if(y-13<M+20){c.showPage();y=testata(c,intestazione(c,d,ponte))}y=sottotitolo(c,y,r);return}
+  i++;if(y-ROWH<M+20){c.showPage();y=testata(c,intestazione(c,d,ponte))}
+  y=riga(c,y,r,v,'r'+i)});
+ if(!piede(c,d,y-4)){c.showPage();piede(c,d,H-M)}
+ c.showPage()}
+
+/* --- scheda 20: elementi accessori --- */
+const BL2=[BL[0],['pg','Presente come guardiavia'],['pp','Presente come parapetto'],...BL.slice(1)];
+function tabella(c,xs,y,h,fn,n){for(let i=0;i<n;i++){const yb=y-h;for(let a=0;a<xs.length-1;a++){c.setStrokeColor(GR);c.setLineWidth(.5);c.rect(xs[a],yb,xs[a+1]-xs[a],h,1,0)}fn(i,yb);y=yb}return y}
+function boxVal(c,x,y,w,h,lab,val){c.setStrokeColor(GR);c.setLineWidth(.5);c.rect(x,y-h,w,h,1,0);c.setFont('Helvetica',6.5);c.setFillColor(DK);c.drawString(x+3,y-8,lab);c.setFillColor(BK);tf(c,val,x,y-h+4,w,'Helvetica',9)}
+function chk(c,x,y,on,lab,size=8){c.setStrokeColor(GR);c.setLineWidth(.6);c.rect(x,y,9,9,1,0);if(on)cross(c,x-1.5,x+10.5,y-1.5,y+10.5);c.setFillColor(BK);c.setFont('Helvetica',size);c.drawString(x+13,y+1.5,lab)}
+function scheda20(c,ponte,d){
+ const v=d.v||{};let y=intestazione(c,d,ponte);const h=24;let gx=M;
+ [['N° corsie','ncorsie',70],['Larghezza carreggiata [m]','lcarr',120],['Larghezza marciapiede [m]','lmarc',120],['Altezza marciapiede [m]','hmarc',115]].forEach(([lab,k,w])=>{boxVal(c,gx,y,w,h,lab,v[k]||'');gx+=w});
+ c.setStrokeColor(GR);c.setLineWidth(.5);c.rect(gx,y-h,CX[16]-gx,h,1,0);
+ c.setFont('Helvetica',6.5);c.setFillColor(DK);c.drawString(gx+3,y-8,'Marciapiede / Barriere laterali');c.setFillColor(BK);
+ let cx=gx+4;
+ [['0','NO'],['1','SI – 1 lato'],['2','SI – 2 lati']].forEach(([val,lab])=>{chk(c,cx,y-h+4,v.marc===val,lab,7.5);cx+=18+c.stringWidth(lab,'Helvetica',7.5)+8});
+ cx+=10;
+ ['1','2','3'].forEach(val=>{chk(c,cx,y-h+4,v.caso===val,'Caso '+val,7.5);cx+=18+c.stringWidth('Caso '+val,'Helvetica',7.5)+8});
+ y-=h+8;
+ const LW=540,xs=[M,M+50,M+160,M+290,M+322,M+380,M+LW],rh=15,hy=y;
+ c.setFillColor(HD);c.rect(M,y-18,LW,18,0,1);c.setFillColor(BK);
+ for(let a=0;a<6;a++){c.setStrokeColor(GR);c.setLineWidth(.5);c.rect(xs[a],y-18,xs[a+1]-xs[a],18,1,0)}
+ c.setFont('Helvetica-Bold',7);
+ ['Codice','Elemento ispezionato','Descrizione difetto','Presente','N° foto','Note'].forEach((t,a)=>c.drawCentredString((xs[a]+xs[a+1])/2,y-12,t));
+ y-=18;
+ const yl=tabella(c,xs,y,rh,(i,yb)=>{
+  const [n,g,t]=EL[i],k='e'+i;c.setFillColor(BK);
+  tf(c,'El.Acc_'+n,xs[0],yb+4.5,xs[1]-xs[0],'Helvetica',6.5);
+  tf(c,g,xs[1],yb+4.5,xs[2]-xs[1],'Helvetica-Bold',7);
+  tf(c,t,xs[2],yb+4.5,xs[3]-xs[2],'Helvetica',7.5);
+  if(v[k])cross(c,xs[3],xs[4],yb,yb+rh);
+  tf(c,v[k+'.f']||'',xs[4],yb+4.5,xs[5]-xs[4],'Helvetica',7);
+  tf(c,v[k+'.n']||'',xs[5],yb+4.5,xs[6]-xs[5],'Helvetica',7)},EL.length);
+ const RX=M+LW+12,RW=CX[16]-RX;
+ const xr=[RX,RX+RW*.46,RX+RW*.46+22,RX+RW*.73,RX+RW*.73+22,RX+RW].map(a=>Math.round(a*10)/10);
+ let y2=hy;
+ c.setFillColor(HD);c.rect(RX,y2-30,RW,30,0,1);c.setFillColor(BK);c.setStrokeColor(GR);c.setLineWidth(.5);c.rect(RX,y2-30,RW,30,1,0);
+ c.setFont('Helvetica-Bold',7);
+ c.drawCentredString((xr[1]+xr[3])/2,y2-10,'GUARDIAVIA');c.drawCentredString((xr[3]+xr[5])/2,y2-10,'PARAPETTO');c.drawCentredString((xr[0]+xr[1])/2,y2-20,'Barriere laterali');
+ c.setFont('Helvetica-Bold',6);
+ ['Pres.','N° foto','Pres.','N° foto'].forEach((t,a)=>c.drawCentredString((xr[a+1]+xr[a+2])/2,y2-25,t));
+ y2-=30;const caso=v.caso,gr=(x0,x1,yb)=>{c.setFillColor(GY);c.rect(x0,yb,x1-x0,rh,0,1);c.setStrokeColor(GR);c.setLineWidth(.5);c.rect(x0,yb,x1-x0,rh,1,0)};
+ tabella(c,xr,y2,rh,(i,yb)=>{
+  if(i<BL2.length){const [k,lab]=BL2[i],pp=k=='pg'||k=='pp';
+   c.setFillColor(BK);tf(c,lab,xr[0],yb+4.5,xr[1]-xr[0],'Helvetica',7.5);
+   [['g.',1],['p.',3]].forEach(([pre,a])=>{
+    const grigio=(pre=='p.'&&(caso=='1'||pp))||(pre=='g.'&&pp&&caso!='3');
+    if(grigio){gr(xr[a],xr[a+1],yb);gr(xr[a+1],xr[a+2],yb);return}
+    if(v[pre+k])cross(c,xr[a],xr[a+1],yb,yb+rh);
+    c.setFillColor(BK);tf(c,v[pre+k+'.f']||'',xr[a+1],yb+4.5,xr[a+2]-xr[a+1],'Helvetica',6.5)})
+  }else{
+   c.setFillColor(BK);tf(c,'Altezza (cm)',xr[0],yb+4.5,xr[1]-xr[0],'Helvetica-Bold',7.5);
+   [['g.',1],['p.',3]].forEach(([pre,a])=>{
+    if(pre=='p.'&&caso=='1')gr(xr[a],xr[a+2],yb);
+    else{c.setFillColor(BK);tf(c,v[pre+'h']||'',xr[a],yb+4.5,xr[a+2]-xr[a],'Helvetica',8)}})}
+ },BL2.length+1);
+ const yb=Math.min(yl,y2-rh*(BL2.length+1))-14;
+ c.setFillColor(BK);c.setFont('Helvetica',8);if(v.fg)c.drawString(M,yb,'Foto generali: '+v.fg);
+ c.showPage()}
+
+/* --- allegato fotografico: 4 foto per pagina (2x2) --- */
+const numeriFoto=d=>{const o=new Set();Object.entries(d.v||{}).forEach(([k,val])=>{if(k=='fg'||k.endsWith('.f'))(String(val||'').match(/\d+/g)||[]).forEach(t=>o.add(t.padStart(3,'0')))});return[...o].sort((a,b)=>a-b)};
+function allegato(c,doc,ponte,d,foto,cache){
+ const nums=numeriFoto(d);if(!nums.length)return 0;
+ const tit='Allegato fotografico – Scheda '+d.s+' · '+NM(d.s)+(d.v&&d.v.n?'  N° '+d.v.n:'');
+ const gap=10,top=H-M-30,cw=(W-2*M-gap)/2,ch=(top-M-gap)/2,np=Math.ceil(nums.length/4);
+ for(let p=0;p<np;p++){
+  c.setFillColor(YE);c.setStrokeColor(GR);c.setLineWidth(.6);c.rect(M,H-M-24,W-2*M,24,1,1);
+  c.setFillColor(BK);c.setFont('Helvetica-Bold',11);c.drawString(M+4,H-M-16,tit);
+  c.setFont('Helvetica',8);c.drawRightString(W-M-4,H-M-16,'Ponte '+(ponte.name||'')+' · pag. foto '+(p+1)+'/'+np);
+  nums.slice(p*4,p*4+4).forEach((n,j)=>{
+   const x0=M+(j%2)*(cw+gap),yb=top-Math.floor(j/2)*(ch+gap)-ch,r=foto[n],capH=16;
+   c.setStrokeColor(GR);c.setLineWidth(.6);c.rect(x0,yb,cw,ch,1,0);
+   c.setFillColor(BK);tf(c,((r&&r.d)||'Foto')+'_'+n,x0+2,yb+5,cw-4,'Helvetica-Bold',9,6);
+   c.setStrokeColor(GR);c.line(x0,yb+capH,x0+cw,yb+capH);
+   const ax=x0+4,ay=yb+capH+4,aw=cw-8,ah=ch-capH-8;
+   try{
+    if(!r)throw 0;
+    if(!(n in cache))cache[n]=doc.addImage(r.u8);
+    const [iw,ih]=doc.imgSize(cache[n]),sc=Math.min(aw/iw,ah/ih),w=iw*sc,h=ih*sc;
+    c.drawImage(cache[n],ax+(aw-w)/2,ay+(ah-h)/2,w,h)
+   }catch(e){c.setFont('Helvetica-Oblique',9);c.setFillColor('#aa0000');c.drawCentredString(x0+cw/2,yb+ch/2,'Foto '+n+' non disponibile')}});
+  c.showPage()}
+ return nums.length}
+
+/* --- ingresso: schede già filtrate; loadFoto(n) -> {d,u8}|null --- */
+async function build(ponte,schede,loadFoto){
+ const doc=Doc(),c=doc.c,foto={},cache={};
+ const L=schede.slice().sort((a,b)=>a.s-b.s||String((a.v||{}).n||'').localeCompare(String((b.v||{}).n||''),'it',{numeric:true}));
+ for(const d of L)for(const n of numeriFoto(d))if(!(n in foto))foto[n]=await loadFoto(n);
+ for(const d of L){if(d.s==20)scheda20(c,ponte,d);else if(CAT[d.s])scheda(c,ponte,d);else continue;allegato(c,doc,ponte,d,foto,cache)}
+ return doc.finish('Schede difetti - '+(ponte.name||''))}
+return{build}})();
+/*PDFX-END*/
+
+const dlb=async(bl,n,ty)=>{const u=URL.createObjectURL(bl),l=document.createElement('a');l.href=u;l.download=n;l.click();if(navigator.share&&navigator.canShare){const f=new File([bl],n,{type:ty});if(navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:n})}catch(e){}}}};
+async function expPdf(id){
+ const L=id?cur.d.filter(x=>x.id==id):cur.d.filter(compiled);
+ if(!L.length){alert('Nessuna scheda compilata da esportare');return}
+ const st=$('st');if(st)st.textContent='Creo il PDF…';
+ try{
+  await put(cur);
+  const F=new Map((await listF(cur.id)).map(r=>[r.n,r])),sf=t=>String(t||'').replace(/[^\w-]+/g,'_');
+  const bl=await PDFX.build({name:cur.name,v:cur.v},L,async n=>{const r=F.get(n);return r?{d:r.d,u8:new Uint8Array(await r.b.arrayBuffer())}:null});
+  await dlb(bl,'schede_'+sf(cur.name)+(id?'_sch'+L[0].s+(L[0].v.n?'-'+sf(L[0].v.n):''):'')+'.pdf','application/pdf')
+ }catch(e){alert('PDF non creato: '+e.message)}
+ if(st)st.textContent='Salvato'}
+home();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
+</script></body></html>
