@@ -51,7 +51,7 @@ main>h2:first-child{border:0;margin-top:4px;padding-top:0}
 #pr{display:none}@page{size:A4 landscape;margin:0}
 .pg{position:relative;width:297mm;height:210mm;padding:8mm 10mm;box-sizing:border-box;overflow:hidden;background:#fff;font-family:Arial,Helvetica,sans-serif;color:#000;break-after:page}
 .gb2{background:#c6e0b4;border-bottom:1.5px solid #8fb36c;text-align:center;font-weight:700;font-size:11pt;padding:2mm;margin-bottom:4mm}
-.sh{display:flex;margin-bottom:3mm;border:1.5px solid #5b9bd5}.sh span{background:#1f4e79;color:#fff;font-size:15pt;padding:2mm 4mm}.sh b{flex:1;background:#bdd7ee;text-align:center;font-size:15pt;padding:2mm}
+.sh{display:flex;justify-content:space-between;align-items:center;background:#1f4e79;color:#fff;border:2px solid #0b2a47;padding:2.5mm 6mm;margin-bottom:3mm}.sh span{font-size:21pt;font-weight:700}.sh b{font-size:16pt}.pg svg{display:block;margin:0 auto;height:146mm;width:auto;max-width:100%}
 .pg table{border-collapse:collapse;width:100%}.pg td,.pg th{border:1px solid #888;padding:1.6mm 3mm;font-size:10.5pt;text-align:center}
 .t1 th{background:#ddebf7;text-align:left;font-weight:400;width:38%}.t1 td{text-align:left}.t2 .cl{width:34%}
 .pn{position:absolute;right:10mm;bottom:5mm;font-size:9pt}.pg small{font-size:8.5pt;display:block;margin-top:2mm}
@@ -69,7 +69,7 @@ const V=k=>X().v[k];
 const inp=(k,l,ty='text',x='')=>`<label>${l}<input data-k="${k}" type="${ty}" ${x} value="${E(V(k))}"></label>`;
 async function home(){
  cur=null;view='home';ctx=null;const p2=(await all()).filter(p=>p.t=='l2').sort((a,b)=>a.name.localeCompare(b.name,'it',{numeric:true}));
- $('h').innerHTML=`<h1>Ispezioni ponti L2</h1><small>${p2.length} ponti · V_04_00</small>`;
+ $('h').innerHTML=`<h1>Ispezioni ponti L2</h1><small>${p2.length} ponti · V_05_00</small>`;
  $('m').innerHTML=`<h2>Livello 2 – Schede difettologiche</h2><div class="row"><button class="p" data-a="new2">Nuovo ponte</button><button data-a="exp2">Esporta tutto (JSON)</button><button onclick="document.getElementById('imp2').click()">Importa JSON</button><input id="imp2" type="file" accept=".json,.txt" hidden></div>`+
  (p2.length?p2.map(p=>`<div class="pt"><b>${E(p.name)}</b><span>${(p.d||[]).length} schede</span><button class="p" data-a="o2" data-id="${p.id}">Apri</button><button data-a="del" data-id="${p.id}">Elimina</button></div>`).join(''):'<p>Nessun ponte. Tocca «Nuovo ponte» per iniziare.</p>');
 }
@@ -221,7 +221,7 @@ function calc1(ya,L,yfl,Lfl){
   if(!nor)M.push('Anno di progetto o di costruzione, e luce della campata più lunga (norma di progettazione)');
   if(y!=null&&sc.length&&nor){
    const r=y<=1945?0:y>=1980?2:1,s0=Math.max(...sc);let a=dl;
-   if(dl>0&&dl<4){if(r==2)a=dl+1;else if(r==0&&dl!=3)a=dl-1}
+   if(dl<4){if(r==2)a=dl+1;else if(r==0&&dl>0&&dl!=3)a=dl-1}
    const a1=a;if(a>0&&a<4)a+=nor[0]=='A'?1:nor[0]=='C'?-1:0;
    vul=MV[a][s0];Object.assign(X,{r,a1,a,s0,vul,nor:nor[0]});
    st('Rapidità di evoluzione del degrado',LDF[a1],(yi?'ultimo intervento '+y:'costruzione '+y+(yfl?' (ipotesi: fascia ortofoto '+yfl+')':''))+' → '+['≤ 1945','1945-1980','≥ 1980'][r]);
@@ -307,7 +307,7 @@ function cda(){
  if(R.W.length)h+='<h3>Avvisi</h3>'+li(R.W);
  h+=`<p><small>Calcolo secondo le Linee Guida (DM 204/2022) § 4.2, Tab. 4.3-4.10 e Fig. 4.2-4.3. Il livello di difettosità usa le convenzioni indicate nei dati di classificazione: è una proposta da verificare dal tecnico. Per i dati inseriti a fascia il calcolo usa gli estremi della fascia; se i risultati differiscono la scelta spetta al tecnico.</small></p>`;
  $('m').innerHTML=h}
-/* ===== V_04_00: stampa CdA a pagine (grafica come scheda di esempio) ===== */
+/* ===== V_05_00: stampa CdA a pagine (grafica come scheda di esempio) ===== */
 const CC=['#a9d18e','#c6e0b4','#ffe699','#ffc000','#ff8f8f'],LU=['BASSA','MEDIO-BASSA','MEDIA','MEDIO-ALTA','ALTA'],LDU=['BASSO','MEDIO-BASSO','MEDIO','MEDIO-ALTO','ALTO'],RD='#c00000',SCN=['Bassa','Medio-bassa','Media','Medio-alta','Alta'];
 const bx=b=>`<rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="3" fill="${b.on?b.c:'#f2f2f2'}" stroke="${b.on?'#000':'#d0d0d0'}" stroke-width="${b.on?1.6:.8}"/><text x="${b.x+b.w/2}" y="${b.y+b.h/2+4.5}" text-anchor="middle" font-size="${b.z||12}" font-weight="${b.on?700:400}" fill="${b.on?'#000':'#9a9a9a'}">${b.t}</text>`;
 const hd=(x,w,a,b,c)=>`<text x="${x+w/2}" y="12" text-anchor="middle" font-size="11.5" font-weight="700" fill="${c||'#000'}">${a}</text>`+(b?`<text x="${x+w/2}" y="25" text-anchor="middle" font-size="11.5" font-weight="700" fill="${c||'#000'}">${b}</text>`:'');
@@ -315,46 +315,62 @@ const mkF=()=>{const B=[],L=[];return{b:(x,y,w,h,t,c,on,z)=>{const o={x,y,w,h,t,
  svg:h=>{const g=[],r=[];L.forEach(([a,b])=>{const on=a.on&&b.on,s=`<line x1="${a.x+a.w}" y1="${a.y+a.h/2}" x2="${b.x-2}" y2="${b.y+b.h/2}" stroke="${on?RD:'#bbb'}" stroke-width="${on?2.2:.7}" marker-end="url(#${on?'ar':'ag'})"/>`;(on?r:g).push(s)});
  return `<svg viewBox="0 0 1000 556" width="100%"><defs><marker id="ag" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0L6,3L0,6z" fill="#bbb"/></marker><marker id="ar" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0L6,3L0,6z" fill="${RD}"/></marker></defs>${h}${g.join('')}${r.join('')}${B.map(bx).join('')}</svg>`}}};
 const by=l=>30+(4-l)*104+50; // centro della fascia del livello l
-function pgV(X){const F=mkF(),P=['≤ 1945','1945-1980','≥ 1980'],c1=[],c2=[],c3=[],c4=[],c5=[],c7=[],ra=(d,r)=>d==4?4:d==0?0:r==2?d+1:(r==0&&d!=3)?d-1:d,na=(a,c)=>a>0&&a<4?a+(c==0?1:c==2?-1:0):a;
- for(let l=0;l<5;l++){const m=by(l);
-  c1[l]=F.b(10,m-22,110,44,LDU[l],CC[l],X.dl==l);
-  c2[l]=l<4?[0,1,2].map(r=>F.b(160,m-47+r*32,90,26,P[r],'#fff',X.dl==l&&X.r==r)):[F.b(160,m-13,90,26,'Qualsiasi','#fff',X.dl==4)];
-  c3[l]=F.b(290,m-22,110,44,LDU[l],CC[l],X.a1==l);
-  c4[l]=l<4?[0,1,2].map(c=>F.b(440,m-47+c*32,90,26,'Classe '+'ABC'[c],'#fff',X.a1==l&&X.nor=='ABC'[c])):[F.b(440,m-13,90,26,'Qualsiasi','#fff',X.a1==4)];
-  c5[l]=F.b(570,m-22,110,44,LDU[l],CC[l],X.a==l);
-  c7[l]=F.b(885,m-22,105,44,LU[l],CC[l],X.vul==l)}
- for(let l=0;l<5;l++){const m=by(l);
-  c2[l].forEach((b,r)=>{F.l(c1[l],b);F.l(b,c3[l<4?ra(l,r):4])});
-  c4[l].forEach((b,c)=>{F.l(c3[l],b);F.l(b,c5[l<4?na(l,c):4])});
-  for(let s=4;s>=0;s--){const rw=F.b(720,m-50+(4-s)*20,125,18,SCN[s],'#fff',X.a==l&&X.s0==s,11);F.l(c5[l],rw);F.l(rw,c7[MV[l][s]])}}
- return F.svg(hd(10,110,'Livello di','difettosità attuale')+hd(160,90,'Rapidità di','evoluzione')+hd(440,90,'Norma di','progettazione')+hd(720,125,'Schema statico,','materiale, luce')+hd(885,105,'Classe di','vulnerabilità',RD))}
-function pgE(X){const F=mkF(),c1=[],c2=[],c3=[],c4=[],c5=[],K=['ALTA','MEDIA','BASSA'],D=[1,0,-1];
- for(let l=0;l<5;l++){const m=by(l);
-  c1[l]=F.b(30,m-22,150,44,LDU[l],CC[l],X.ep==l);
-  c2[l]=l<4?[0,1].map(r=>F.b(240,m-30+r*32,120,26,r?'Presenza alt.':'Assenza alt.','#fff',X.ep==l&&(r==1)==X.alt)):[F.b(240,m-13,120,26,'Qualsiasi','#fff',X.ep==4)];
-  c3[l]=F.b(420,m-22,150,44,LDU[l],CC[l],X.e1==l);
-  c4[l]=K.map((t,k)=>F.b(630,m-47+k*32,110,26,t,'#fff',X.e1==l&&X.ente=='AMB'[k]));
-  c5[l]=F.b(810,m-22,180,44,LU[l],CC[l],X.es==l)}
- for(let l=0;l<5;l++){c2[l].forEach((b,r)=>{F.l(c1[l],b);F.l(b,c3[l<4&&r==0?Math.min(l+1,4):l])});c4[l].forEach((b,k)=>{F.l(c3[l],b);F.l(b,c5[c4n(l+D[k])])})}
- return F.svg(hd(30,150,'Livello di TGM','e luce campata')+hd(240,120,'Alternative','stradali')+hd(630,110,'Tipologia di','ente scavalcato')+hd(810,180,'Classe di','esposizione',RD))}
-const c4n=n=>Math.max(0,Math.min(4,n));
-function pgF(X,cda){const F=mkF(),G=[['Classe di pericolosità',X.pe],['Classe di vulnerabilità',X.vul],['Classe di esposizione',X.es]],T={x:660,y:300,w:0,h:0,on:true};let o='';
+/* ===== V_05_00: schemi fedeli alle Fig. 4.2 e 4.3, percorso evidenziato, resto sbiadito ===== */
+const NV='#1f2d4d',GR='#548235',GY='#808080',BC=[NV,RD,GR],MKI={[NV]:'n',[RD]:'r',[GR]:'g',[GY]:'y'},c4n=n=>Math.max(0,Math.min(4,n));
+const FG=()=>{const B=[],L=[];return{
+ b:(x,y,w,h,t,c,on,o)=>{const q=Object.assign({x,y,w,h,t,c,on},o);B.push(q);return q},
+ l:(pts,col,on,head)=>L.push({pts,col,on,head}),
+ svg:(W,H,hd)=>{const ln=a=>a.map(l=>`<polyline points="${l.pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="${l.col}" stroke-width="${l.on?3.2:1.4}"${l.head?` marker-end="url(#m${MKI[l.col]})"`:''}/>`).join(''),
+  bo=b=>{const z=b.z||15,t=String(b.t).split('\n'),y0=b.y+b.h/2-(t.length-1)*z*.55+z*.35;return `<g${b.on?'':' opacity=".3"'}><rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" fill="${b.c}" stroke="${b.on?(b.s||'#000'):(b.s||'none')}" stroke-width="${b.on?4:1.6}"/>`+t.map((s,i)=>`<text x="${b.x+b.w/2}" y="${y0+i*z*1.1}" text-anchor="middle" font-size="${z}" font-weight="${b.bold?700:400}">${s}</text>`).join('')+'</g>'},
+  mk=[[NV,'n'],[RD,'r'],[GR,'g'],[GY,'y']].map(([c,i])=>`<marker id="m${i}" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="13" refY="7" orient="auto"><path d="M0,1L13,7L0,13z" fill="${c}"/></marker>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet"><defs>${mk}</defs>${hd}<g opacity=".35">${ln(L.filter(l=>!l.on))}</g>${ln(L.filter(l=>l.on))}${B.filter(b=>!b.on).map(bo).join('')}${B.filter(b=>b.on).map(bo).join('')}</svg>`}}};
+const th=(x,a,b,c)=>`<text x="${x}" y="22" text-anchor="middle" font-size="16" font-weight="700" fill="${c||'#000'}">${a}</text>`+(b?`<text x="${x}" y="44" text-anchor="middle" font-size="16" font-weight="700" fill="${c||'#000'}">${b}</text>`:'');
+function pgV(X){const F=FG(),P=['≤ 1945','1945-1980','≥ 1980'],nt=X.dl<4,T=X.dl==4,LD=['BASSO','MEDIO -\nBASSO','MEDIO','MEDIO -\nALTO','ALTO'],
+ Y1=[717,590,462,337],Y3=[719,591,464,340,215],H3=[108,102,107,102,106],Y5=[720,592,465,340,215],Y2=[[690,723,756],[560,593,626],[433,465,498],[308,341,375]],Y4=[[721],[556,589,622],[431,464,497],[306,340,373],[214]],
+ RC=[[678,699,721,742,764],[548,570,592,614,636],[421,442,464,486,508],[297,319,341,362,383],[172,193,215,237,258]],A3=[[683,722,637],[678,592,510],[548,465,383],[309,341,250]],A5=[null,[493,589,681],[377,464,552],[246,340,428]],
+ ra=(d,r)=>d==0?(r==2?1:0):r==2?d+1:(r==0&&d!=3)?d-1:d,na=(a,c)=>a+(c==0?1:c==2?-1:0),hz=(x1,x2,y,col,on,head)=>F.l([[x1,y],[x2,y]],col,on,head);
+ const t=[F.b(40,86,118,54,'ALTO',CC[4],T,{bold:1}),F.b(206,96,116,34,'Qualsiasi','#fff',T,{s:GY}),F.b(385,86,118,54,'ALTO',CC[4],T,{bold:1}),F.b(552,96,110,34,'Qualsiasi','#fff',T,{s:GY}),F.b(729,86,119,54,'ALTO',CC[4],T,{bold:1}),F.b(897,96,123,34,'Qualsiasi','#fff',T,{s:GY}),F.b(1077,86,147,54,'ALTA',CC[4],T,{bold:1})];
+ [[158,206,0],[322,385,1],[503,552,0],[662,729,1],[848,897,0],[1020,1077,1]].forEach(([a,b,h])=>hz(a,b,113,GY,T,h));
+ const c3=[],c5=[],c1=[],c2=[],c4=[];
+ for(let l=0;l<5;l++){
+  c3[l]=F.b(385,Y3[l]-H3[l]/2,118,H3[l],LD[l],CC[l],l==4?X.a1==4&&nt:X.a1==l,{bold:1});
+  c5[l]=F.b(729,Y5[l]-H3[l]/2,119,H3[l],LD[l],CC[l],l==4?X.a==4&&nt:X.a==l,{bold:1});
+  if(l<4){c1[l]=F.b(40,Y1[l]-53,118,106,LD[l],CC[l],X.dl==l,{bold:1});
+   c2[l]=Y2[l].map((y,r)=>F.b(206,y-13,116,26,P[r],'#fff',X.dl==l&&X.r==r,{s:BC[r],z:14}))}}
+ for(let l=0;l<5;l++){
+  if(l<4)c2[l].forEach((b,r)=>{const y=Y2[l][r],T3=c3[ra(l,r)],ly=A3[l][r],xm=346+r*8;hz(158,206,y,BC[r],b.on&&c1[l].on);F.l(Math.abs(ly-y)<2?[[322,y],[385,ly]]:[[322,y],[xm,y],[xm,ly],[385,ly]],BC[r],b.on&&T3.on,1)});
+  c4[l]=l==0||l==4?[F.b(552,l?186:692,110,56,'Qualsiasi','#fff',l?X.a1==4&&nt:X.a1==0,{s:GY})]:Y4[l].map((y,c)=>F.b(552,y-13,110,26,'Classe '+'ABC'[c],'#fff',X.a1==l&&X.nor=='ABC'[c],{s:BC[c],z:14}));
+  c4[l].forEach((b,c)=>{const y=b.y+b.h/2,col=l==0||l==4?GY:BC[c];hz(503,552,y,col,c3[l].on&&b.on);
+   if(l==0||l==4)hz(662,729,y,GY,b.on&&c5[l].on,1);else{const T5=c5[na(l,c)],ly=A5[l][c],xm=686+c*5;F.l(Math.abs(ly-y)<2?[[662,y],[729,ly]]:[[662,y],[xm,y],[xm,ly],[729,ly]],col,b.on&&T5.on,1)}});
+  const rows=RC[l].map((y,i)=>{const s=4-i,on=(l==4?X.a==4&&nt:X.a==l)&&X.s0==s;hz(848,897,y,GY,c5[l].on&&on);return{y,s,on,r:MV[l][s],b:F.b(897,y-9.5,123,19,SCN[s],CC[s],on,{z:12})}});
+  for(let i=0;i<5;){let j=i;while(j+1<5&&rows[j+1].r==rows[i].r)j++;const g=rows.slice(i,j+1),on=g.some(q=>q.on),bb=F.b(1077,rows[i].y-10.75,147,rows[j].y-rows[i].y+21.5,LU[rows[i].r],CC[rows[i].r],on,{bold:1});g.forEach(q=>hz(1020,1077,q.y,GY,q.on&&on,1));i=j+1}}
+ return F.svg(1250,790,th(99,'Livello di','difettosità attuale')+th(414,'Rapidità di evoluzione del degrado')+th(700,'Norma di progettazione')+th(958,'Schema statico,','materiale, luce')+th(1150,'Classe di','vulnerabilità',RD))}
+function pgE(X){const F=FG(),LD=['BASSA','MEDIO -\nBASSA','MEDIA','MEDIO -\nALTA','ALTA'],Y1=[588,470,349,230,111],Y3=[588,470,350,240,112],Y2=[[569,607],[449,487],[330,369],[214,252],[113]],Y4=[[555,588,621],[438,471,505],[318,351,384],[197,231,265],[79,112,146]],
+ A3=[[505,607],[390,487],[268,369],[148,252]],A5=[[505,592,621],[387,471,573],[268,351,453],[148,231,314],[79,112,195]],D=[1,0,-1],K=['Alta','Media','Bassa'],c1=[],c2=[],c3=[],c4=[],c5=[];
+ for(let l=0;l<5;l++){c1[l]=F.b(128,Y1[l]-45,118,91,LD[l],CC[l],X.ep==l,{bold:1});c3[l]=F.b(457,Y3[l]-45,113,91,LD[l],CC[l],X.e1==l,{bold:1});c5[l]=F.b(792,Y1[l]-46,117,92,LD[l],CC[l],X.es==l,{bold:1});
+  c2[l]=l==4?[F.b(276,85,122,56,'Qualsiasi','#fff',X.ep==4,{s:GY})]:[0,1].map(r=>F.b(276,Y2[l][r]-12,122,25,r?'Presenza alt.':'Assenza alt.','#fff',X.ep==l&&(r==1)==X.alt,{s:r?RD:NV,z:14}));
+  c4[l]=Y4[l].map((y,k)=>F.b(627,y-12,107,25,K[k],'#fff',X.e1==l&&X.ente=='AMB'[k],{s:BC[k],z:14}))}
+ for(let l=0;l<5;l++){c2[l].forEach((b,r)=>{const y=b.y+b.h/2,col=l==4?GY:r?RD:NV;F.l([[246,y],[276,y]],col,b.on&&c1[l].on);
+   const T=c3[l<4&&r==0?l+1:l],ly=l==4?y:A3[l][r];F.l(Math.abs(ly-y)<2?[[398,y],[457,ly]]:[[398,y],[428,y],[428,ly],[457,ly]],col,b.on&&T.on,1)});
+  c4[l].forEach((b,k)=>{const y=Y4[l][k],ly=A5[l][k],T=c5[c4n(l+D[k])];F.l([[570,y],[627,y]],BC[k],c3[l].on&&b.on);F.l(Math.abs(ly-y)<2?[[734,y],[792,ly]]:[[734,y],[763,y],[763,ly],[792,ly]],BC[k],b.on&&T.on,1)})}
+ return F.svg(1000,650,th(187,'Livello di TGM e','Luce media campata')+th(430,'Alternative stradali')+th(680,'Tipologia di','ente scavalcato')+th(850,'Classe di','esposizione',RD))}
+function pgF(X,cda){const F=mkF(),G=[['Classe di pericolosità',X.pe],['Classe di vulnerabilità',X.vul],['Classe di esposizione',X.es]],cb=[];let o='';
+ for(let l=4;l>=0;l--)cb[l]=F.b(700,190+(4-l)*50,230,36,LU[l].replace('-',' - '),CC[l],cda==l,15);
  G.forEach(([t,val],g)=>{const y0=10+g*180;o+=`<text x="20" y="${y0+85}" font-size="16" font-weight="700">${t}</text>`;
-  for(let l=4;l>=0;l--){const b=F.b(260,y0+10+(4-l)*32,190,26,LU[l].replace('-',' - '),CC[l],val==l,13);if(val==l)F.l(b,T)}});
- for(let l=4;l>=0;l--)F.b(700,190+(4-l)*50,230,36,LU[l].replace('-',' - '),CC[l],cda==l,15);
+  for(let l=4;l>=0;l--){const b=F.b(260,y0+10+(4-l)*32,190,26,LU[l].replace('-',' - '),CC[l],val==l,13);if(val==l)F.l(b,{x:702,y:cb[cda].y+9+g*9,w:0,h:0,on:true})}});
  return F.svg(`<rect x="640" y="10" width="350" height="530" fill="#fae3d6"/>`+['Classe di attenzione','rischio strutturale e','fondazionale'].map((t,i)=>`<text x="815" y="${90+i*22}" text-anchor="middle" font-size="17" font-weight="700" fill="${RD}">${t}</text>`).join('')+o)}
 function cdaPrint(){
  const R=calcCdA();if(R.cda==null){alert(R.pend?'Scegli prima il risultato adottato nella schermata «Classe di attenzione».':'CdA non calcolabile: mancano dei dati.');return}
  const g=R.ok.find(g=>g.cda===R.cda),r=g.sc[0],X=r.X,v=cur.v,n=E(cur.name),dash=x=>x===undefined||x===null||x===''?'–':E(x);
  const S1=(r,n)=>r.S.find(s=>s.n==n);
  const pg=(i,b)=>`<section class="pg"><div class="gb2">CLASSIFICAZIONE sulla base del RISCHIO STRUTTURALE e FONDAZIONALE</div>${b}<div class="pn">${i}</div></section>`,sh=t=>`<div class="sh"><span>${t}</span><b>Ponte ${n}</b></div>`,rw=(l,t)=>`<tr><th>${l}</th><td>${dash(t)}</td></tr>`;
- const fl=(k,kf,m)=>v[k]!==undefined&&v[k]!==''?v[k]:(v[kf]&&m[v[kf]]?'fascia '+m[v[kf]]:''),yn=k=>({'1':'Sì','0':'No'}[v[k]]),y=X.y,per=y==null?'':(y<=1945?'≤ 1945':y>=1980?'≥ 1980':'1945-1980')+' (anno '+y+')';
+ const fl=(k,kf,m)=>v[k]!==undefined&&v[k]!==''?v[k]:(v[kf]&&m[v[kf]]?'fascia '+m[v[kf]]:''),yn=k=>({'1':'Sì','0':'No'}[v[k]]),y=X.y,per=v.cl_anno||'';
  const sc=[v.cl_t,v.cl_t2].filter(Boolean).join(' / '),mat=[v.cl_m,v.cl_m2].filter(Boolean).join(' / ');
- const p1=pg(1,`<table class="t1">${rw('Ponte',cur.name)}${rw('Denominazione',v.cl_denom||v.strada)}${rw('Luce complessiva',v.cl_ltot?v.cl_ltot+' m':'')}${rw('N. campate',v.cl_nc)}${rw('Materiale impalcato',mat)}${rw('Schema statico',sc)}${rw('Periodo di costruzione',per)}${rw('Progetto originale',yn('cl_prog'))}${rw('Categoria ponte',{I:'I (ponti destinati al transito di carichi civili e militari)',II:'II (ponti destinati al transito dei soli carichi civili)'}[v.cl_cat])}${rw('Limitazione di traffico',v.cl_limt||(v.cl_str?'Classe '+v.cl_str+' · '+{A:'carichi di progetto NTC',B:'44 t',C:'26 t',D:'8 t',E:'3,5 t'}[v.cl_str]:''))}${rw('Frequenza TGMP/sing. corsia',fl('cl_vc','cl_vc_f',{B:'bassa (≤ 300)',M:'media (300–700)',A:'alta (≥ 700)'}))}${rw('Misure di traffico di riferimento (TGM)',fl('cl_tgm','cl_tgm_f',{B:'bassa (≤ 10.000)',M:'media (10.000–25.000)',A:'alta (≥ 25.000)'}))}${rw('Misure di traffico di riferimento (TGMp)',v.cl_tgmp)}${rw('Trasporto merci pericolose',yn('cl_mp'))}${rw('Presenza di alternative stradali',{P:'Sì',A:'No'}[v.cl_alt])}${rw('Ostacolo',v.cl_ost||{A:'Ente di classe alta',M:'Ente di classe media',B:'Ente di classe bassa'}[v.cl_ente])}</table>`);
+ const p1=pg(1,`<table class="t1">${rw('Ponte',cur.name)}${rw('Denominazione',v.cl_denom||v.strada)}${rw('Luce complessiva',v.cl_ltot?v.cl_ltot+' m':'')}${rw('N. campate',v.cl_nc)}${rw('Materiale impalcato',mat)}${rw('Schema statico',sc)}${rw('Periodo di costruzione',per)}${v.cl_anno_int?rw('Anno ultimo intervento significativo',v.cl_anno_int):''}${rw('Progetto originale',yn('cl_prog'))}${rw('Categoria ponte',{I:'I (ponti destinati al transito di carichi civili e militari)',II:'II (ponti destinati al transito dei soli carichi civili)'}[v.cl_cat])}${rw('Limitazione di traffico',v.cl_limt||(v.cl_str?'Classe '+v.cl_str+' · '+{A:'carichi di progetto NTC',B:'44 t',C:'26 t',D:'8 t',E:'3,5 t'}[v.cl_str]:''))}${rw('Frequenza TGMP/sing. corsia',fl('cl_vc','cl_vc_f',{B:'bassa (≤ 300)',M:'media (300–700)',A:'alta (≥ 700)'}))}${rw('Misure di traffico di riferimento (TGM)',fl('cl_tgm','cl_tgm_f',{B:'bassa (≤ 10.000)',M:'media (10.000–25.000)',A:'alta (≥ 25.000)'}))}${rw('Misure di traffico di riferimento (TGMp)',v.cl_tgmp)}${rw('Trasporto merci pericolose',yn('cl_mp'))}${rw('Presenza di alternative stradali',{P:'Sì',A:'No'}[v.cl_alt])}${rw('Ostacolo',v.cl_ost||{A:'Ente di classe alta',M:'Ente di classe media',B:'Ente di classe bassa'}[v.cl_ente])}</table>`);
  const CL=[['A','Carichi di progetto previsti dalle Norme Tecniche'],['B','Limitazione di carico a 44 t'],['C','Limitazione di carico a 26 t'],['D','Limitazione di carico a 8,0 t'],['E','Limitazione di carico a 3,5 t']],FQ=['Alta','Media','Bassa'];
- const tp=CL.map(([c,d])=>{const s=X.str==c,lb=`<td rowspan="${c=='E'?1:3}" class="cl" style="${s?'background:#d9d9d9':''}"><b>Classe ${c}</b><br><i>${d}</i></td>`;
-  if(c=='E')return `<tr>${lb}<td colspan="3" style="${s?'background:'+CC[0]+';font-weight:700':''}">BASSA</td></tr>`;
-  return `<tr>${lb}<td colspan="3"><b>Frequenza passaggi di veicoli commerciali</b></td></tr><tr>${FQ.map((q,i)=>`<td style="${s&&X.f==i?'background:#f2f2f2':''}"><b>${q}</b></td>`).join('')}</tr><tr>${[0,1,2].map(i=>`<td style="${s&&X.f==i?'background:'+CC[X.pe]+';font-weight:700':''}">${LU[T43[c][i]]}</td>`).join('')}</tr>`}).join('');
+ const tp=CL.map(([c,d])=>{const s=X.str==c,lb=`<td rowspan="${c=='E'?1:3}" class="cl" style="${s?'background:#1f4e79;color:#fff;outline:3px solid '+RD+';font-size:12pt':''}"><b>Classe ${c}</b><br><i>${d}</i></td>`;
+  if(c=='E')return `<tr>${lb}<td colspan="3" style="${s?'background:'+CC[0]+';font-weight:700;border:3px solid #000':''}">BASSA</td></tr>`;
+  return `<tr>${lb}<td colspan="3"><b>Frequenza passaggi di veicoli commerciali</b></td></tr><tr>${FQ.map((q,i)=>`<td style="${s&&X.f==i?'background:#bdd7ee;font-weight:700':''}"><b>${q}</b></td>`).join('')}</tr><tr>${[0,1,2].map(i=>`<td style="${s&&X.f==i?'background:'+CC[X.pe]+';font-weight:700;border:3px solid #000':''}">${LU[T43[c][i]]}</td>`).join('')}</tr>`}).join('');
  const p2=pg(2,sh('Pericolosità')+`<table class="t2"><tr><th colspan="4" style="color:${RD}">CLASSE DI PERICOLOSITÀ</th></tr>${tp}</table><small>Classe stradale in funzione della massima massa ammissibile (Tab. 4.2) e frequenza dei veicoli commerciali per singola corsia (Tab. 4.4): ${E((S1(r,'Pericolosità')||{}).det||'')}.</small>`);
  const p3=pg(3,sh('Vulnerabilità')+pgV(X)+`<small>Livello di difettosità: ${E((S1(r,'Livello di difettosità')||{}).det||'')}. Schema statico, materiale, luce: ${E((S1(r,'Schema statico, materiale, luce')||{}).det||'')}. ${X.dl==4?'Difettosità ALTO: vulnerabilità ALTA a prescindere dagli altri fattori.':''}</small>`);
  const p4=pg(4,sh('Esposizione')+pgE(X)+`<small>${E((S1(r,'Esposizione')||{}).det||'')}.</small>`);
