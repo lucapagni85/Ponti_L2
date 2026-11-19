@@ -48,8 +48,16 @@ main>h2:first-child{border:0;margin-top:4px;padding-top:0}
 @media print{header,button,.row{display:none}body{background:#fff}}
 .ph{display:flex;gap:8px;margin-top:6px}.th{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.th img{height:72px;border:1px solid var(--ln);border-radius:6px}
 #ov{position:fixed;inset:0;background:#000e;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;padding:10px}#ov img{max-width:100%;max-height:72vh}#ov p{margin:8px;text-align:center}
+#pr{display:none}@page{size:A4 landscape;margin:0}
+.pg{position:relative;width:297mm;height:210mm;padding:8mm 10mm;box-sizing:border-box;overflow:hidden;background:#fff;font-family:Arial,Helvetica,sans-serif;color:#000;break-after:page}
+.gb2{background:#c6e0b4;border-bottom:1.5px solid #8fb36c;text-align:center;font-weight:700;font-size:11pt;padding:2mm;margin-bottom:4mm}
+.sh{display:flex;margin-bottom:3mm;border:1.5px solid #5b9bd5}.sh span{background:#1f4e79;color:#fff;font-size:15pt;padding:2mm 4mm}.sh b{flex:1;background:#bdd7ee;text-align:center;font-size:15pt;padding:2mm}
+.pg table{border-collapse:collapse;width:100%}.pg td,.pg th{border:1px solid #888;padding:1.6mm 3mm;font-size:10.5pt;text-align:center}
+.t1 th{background:#ddebf7;text-align:left;font-weight:400;width:38%}.t1 td{text-align:left}.t2 .cl{width:34%}
+.pn{position:absolute;right:10mm;bottom:5mm;font-size:9pt}.pg small{font-size:8.5pt;display:block;margin-top:2mm}
+@media print{body.pp>header,body.pp>main{display:none}body.pp #pr{display:block}body.pp{background:#fff}}
 </style></head><body>
-<header id="h"></header><main id="m"></main>
+<header id="h"></header><main id="m"></main><div id="pr"></div>
 <script>
 const E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const $=id=>document.getElementById(id);
@@ -61,7 +69,7 @@ const V=k=>X().v[k];
 const inp=(k,l,ty='text',x='')=>`<label>${l}<input data-k="${k}" type="${ty}" ${x} value="${E(V(k))}"></label>`;
 async function home(){
  cur=null;view='home';ctx=null;const p2=(await all()).filter(p=>p.t=='l2').sort((a,b)=>a.name.localeCompare(b.name,'it',{numeric:true}));
- $('h').innerHTML=`<h1>Ispezioni ponti L2</h1><small>${p2.length} ponti · V_03_00</small>`;
+ $('h').innerHTML=`<h1>Ispezioni ponti L2</h1><small>${p2.length} ponti · V_04_00</small>`;
  $('m').innerHTML=`<h2>Livello 2 – Schede difettologiche</h2><div class="row"><button class="p" data-a="new2">Nuovo ponte</button><button data-a="exp2">Esporta tutto (JSON)</button><button onclick="document.getElementById('imp2').click()">Importa JSON</button><input id="imp2" type="file" accept=".json,.txt" hidden></div>`+
  (p2.length?p2.map(p=>`<div class="pt"><b>${E(p.name)}</b><span>${(p.d||[]).length} schede</span><button class="p" data-a="o2" data-id="${p.id}">Apri</button><button data-a="del" data-id="${p.id}">Elimina</button></div>`).join(''):'<p>Nessun ponte. Tocca «Nuovo ponte» per iniziare.</p>');
 }
@@ -88,7 +96,7 @@ document.addEventListener('click',async e=>{
  else if(a=='fd'){const n=b.dataset.n;if(confirm('Eliminare la foto '+n+'?')){const r=await tx('readonly',s=>s.get(cur.id+'|'+n),'f');await tx('readwrite',s=>s.delete(cur.id+'|'+n),'f');const d=r&&cur.d.find(x=>x.id==r.sid);if(d&&d.v[r.k])d.v[r.k]=String(d.v[r.k]).split(/\s*[,;]\s*/).filter(t=>t&&t.padStart(3,'0')!=n).join(', ');await put(cur);const o=$('ov');if(o){URL.revokeObjectURL(o.dataset.u);o.remove()}if(view=='sch')keep(render)}}
  else if(a=='cda'){await put(cur);cda()}
  else if(a=='backc'){dif()}
- else if(a=='prn'){print()}
+ else if(a=='prn'){cdaPrint()}
  else if(a=='ecda'){const R=calcCdA(),o=[['ponte','passaggio','risultato','dettaglio','ipotesi']];R.G.forEach(g=>g.sc.forEach(r=>{const h=r.hyp.join(', ');r.S.forEach(s=>o.push([cur.name,s.n,s.val,s.det,h]))}));if(R.ok.length>1)o.push([cur.name,'CdA adottata dal tecnico',R.cda!=null?LVL[R.cda].toUpperCase():'DA DECIDERE','','']);R.M.forEach(m=>o.push([cur.name,'DATO MANCANTE',m,'']));R.W.forEach(w=>o.push([cur.name,'AVVISO',w,'']));dlf('\ufeff'+o.map(r=>r.map(qc).join(';')).join('\r\n'),'cda_'+cur.name.replace(/[^\w-]+/g,'_')+'.csv','text/csv')}
  else if(a=='add'){const d={id:Date.now().toString(36),s:+b.dataset.s,v:{}};cur.d.push(d);await put(cur);ctx=d;sch()}
  else if(a=='os'){ctx=cur.d.find(x=>x.id==b.dataset.id);sch()}
@@ -178,7 +186,7 @@ const MX=[['AAAAA','aMMMb','MMMbB','MMbBB','bbBBB'],['AAAAA','aaMMM','aMMbb','MM
 const num=s=>{const x=parseFloat(String(s??'').replace(',','.'));return isNaN(x)?null:x},c4=n=>Math.max(0,Math.min(4,n));
 const normaCl=(c,y,L)=>{const big=L>=10;if(y<(c=='I'?1952:1990))return['A',''];if(y<=(big?2005:1990))return['B',''];if(y>=(big?2008:2005))return['C',''];return['B','Anno di progetto in un intervallo non coperto dalle LG: assunta classe B (cautelativa)']};
 function calc1(ya,L,yfl,Lfl){
- const v=cur.v,S=[],W=[],M=[],st=(n,val,det)=>S.push({n,val,det:det||''});
+ const v=cur.v,S=[],W=[],M=[],X={},st=(n,val,det)=>S.push({n,val,det:det||''});
  const kel=num(v.cl_kel)||1,nel=num(v.cl_nel)||6,SC=(cur.d||[]).filter(d=>d.s!=20&&CAT[d.s]);
  let dl=null,G3=0;const wh=[];
  // 1. livello di difettosità (Tab. 4.5)
@@ -199,8 +207,8 @@ function calc1(ya,L,yfl,Lfl){
   if(G3>=nel){dl=Math.max(dl,1);wh.push([1,G3+' difetti G≤3 visti (soglia '+nel+')'])}
   st('Livello di difettosità',LDF[dl],wh.sort((a,b)=>b[0]-a[0]).slice(0,3).map(x=>x[1]).join(' | ')||'nessun difetto significativo')}
  // 2. vulnerabilità (Fig. 4.2)
- const LM=fv(v,'cl_lmed','cl_lmed_f',TB.lmed),Lm=LM.x,nc=num(v.cl_nc),yi=num(v.cl_anno_int),y=yi||ya;let vul=null;
- if(dl==4){vul=4;st('Vulnerabilità','Alta','difettosità ALTO: vulnerabilità ALTA a prescindere dagli altri fattori')}
+ const LM=fv(v,'cl_lmed','cl_lmed_f',TB.lmed),Lm=LM.x,nc=num(v.cl_nc),yi=num(v.cl_anno_int),y=yi||ya;let vul=null;X.dl=dl;X.y=y;
+ if(dl==4){vul=4;Object.assign(X,{vul:4,a1:4,a:4,r:-1,s0:-1});st('Vulnerabilità','Alta','difettosità ALTO: vulnerabilità ALTA a prescindere dagli altri fattori')}
  else if(dl!=null){
   const sc=[[v.cl_t,v.cl_m],[v.cl_t2,v.cl_m2]].filter(x=>x[0]).map(([t,m])=>{const r=T46[t]&&T46[t][m];return r&&L!=null&&nc!=null?c4(+r[L<=5?0:L<15?1:L<25?2:3]+(nc>3?1:0)):null}).filter(x=>x!=null);
   let nor=v.cl_nor?[v.cl_nor,'impostata a mano']:null;
@@ -215,14 +223,14 @@ function calc1(ya,L,yfl,Lfl){
    const r=y<=1945?0:y>=1980?2:1,s0=Math.max(...sc);let a=dl;
    if(dl>0&&dl<4){if(r==2)a=dl+1;else if(r==0&&dl!=3)a=dl-1}
    const a1=a;if(a>0&&a<4)a+=nor[0]=='A'?1:nor[0]=='C'?-1:0;
-   vul=MV[a][s0];
+   vul=MV[a][s0];Object.assign(X,{r,a1,a,s0,vul,nor:nor[0]});
    st('Rapidità di evoluzione del degrado',LDF[a1],(yi?'ultimo intervento '+y:'costruzione '+y+(yfl?' (ipotesi: fascia ortofoto '+yfl+')':''))+' → '+['≤ 1945','1945-1980','≥ 1980'][r]);
    st('Norma di progettazione',LDF[a],'classe '+nor[0]+(nor[1]?' ('+nor[1]+')':''));
    st('Schema statico, materiale, luce',LVL[s0],'Tab. 4.6'+(Lfl?' (luce massima: '+Lfl+')':'')+(nc>3?' (+1 livello: più di 3 campate)':'')+(sc.length>1?' (più gravoso tra i due schemi)':''));
    st('Vulnerabilità',LVL[vul])}}
  // 3. pericolosità (Tab. 4.3-4.4)
  let pe=null;const VC=fv(v,'cl_vc','cl_vc_f',TB.vc),vc=VC.x;
- if(v.cl_str&&vc!=null){const f=vc>=700?0:vc>300?1:2;pe=T43[v.cl_str][f];st('Pericolosità',LVL[pe],'classe stradale '+v.cl_str+', '+(VC.f?'fascia '+{B:'bassa (≤ 300)',M:'media (300–700)',A:'alta (≥ 700)'}[VC.b]+' di veicoli commerciali/giorno per corsia':vc+' veicoli commerciali/giorno per corsia (frequenza '+['alta','media','bassa'][f]+')'))}
+ if(v.cl_str&&vc!=null){const f=vc>=700?0:vc>300?1:2;pe=T43[v.cl_str][f];Object.assign(X,{str:v.cl_str,f,pe});st('Pericolosità',LVL[pe],'classe stradale '+v.cl_str+', '+(VC.f?'fascia '+{B:'bassa (≤ 300)',M:'media (300–700)',A:'alta (≥ 700)'}[VC.b]+' di veicoli commerciali/giorno per corsia':vc+' veicoli commerciali/giorno per corsia (frequenza '+['alta','media','bassa'][f]+')'))}
  else M.push('Classe stradale e veicoli commerciali/giorno per corsia');
  // 4. esposizione (Tab. 4.7-4.8, Fig. 4.3)
  let es=null;const TG=fv(v,'cl_tgm','cl_tgm_f',TB.tgm),tg=TG.x;
@@ -231,13 +239,13 @@ function calc1(ya,L,yfl,Lfl){
   if(v.cl_ped=='1')e=c4(e+1);
   if(v.cl_alt!='P')e=c4(e+1);
   if(!v.cl_alt)W.push('Alternative stradali non indicate: assunta assenza (cautelativa)');
-  es=c4(e+{A:1,M:0,B:-1}[v.cl_ente]);
+  Object.assign(X,{ep:v.cl_ped=='1'?c4(e0+1):e0,e1:e,alt:v.cl_alt=='P',ente:v.cl_ente});es=c4(e+{A:1,M:0,B:-1}[v.cl_ente]);X.es=es;
   st('Esposizione',LVL[es],(TG.f?'TGM in fascia '+{B:'bassa (≤ 10.000)',M:'media (10.000–25.000)',A:'alta (≥ 25.000)'}[TG.b]:'TGM '+tg)+', luce media '+(LM.f?'in fascia '+{P:'piccola (≤ 20 m)',M:'media (20–50 m)',G:'grande (> 50 m)'}[LM.b]:Lm+' m')+' → '+LVL[e0]+(v.cl_ped=='1'?'; +1 pedoni':'')+'; alternative '+(v.cl_alt=='P'?'presenti':'assenti')+'; ente scavalcato '+{A:'alta',M:'media',B:'bassa'}[v.cl_ente])}
  else M.push('TGM, luce media delle campate ed ente scavalcato');
  if(v.cl_mp=='1')st('Merci pericolose','Sì','non cambia la classe: priorità più alta tra ponti della stessa classe');
  let cda=null;
  if(pe!=null&&vul!=null&&es!=null){cda='BbMaA'.indexOf(MX[pe][4-vul][4-es]);st('Classe di attenzione strutturale e fondazionale',LVL[cda].toUpperCase(),'Tab. 4.10')}
- return{S,W,M,cda}}
+ return{S,W,M,cda,X}}
 /* ===== V_02_00: valori precisi oppure fasce delle Linee Guida; scenari multipli per le fasce a cavallo di una soglia ===== */
 const TB={vc:{B:150,M:500,A:800},tgm:{B:5000,M:17500,A:30000},lmed:{P:10,M:35,G:60},lmax:{'0':3,'1':9,'2':20,'3':30}}; // valori rappresentativi di ogni fascia
 const LB={'0':'≤ 5 m','1':'5–15 m','2':'15–25 m','3':'≥ 25 m'};
@@ -281,6 +289,7 @@ ${du('cl_tgm','TGM veicoli/giorno (intera carreggiata)',I,'cl_tgm_f',[['B','Bass
 <div class="w"><label>Ente scavalcato</label>${cp('cl_ente',[['A','Alta · ferrovia, zona edificata, strada primaria'],['M','Media · strada secondaria, corso d’acqua'],['B','Bassa · depressione del terreno']],0)}</div>
 <div class="w"><label>Frequente transito di pedoni (marciapiedi, centro abitato)</label>${yn('cl_ped')}</div>
 <div class="w"><label>Trasporto merci pericolose non occasionale</label>${yn('cl_mp')}</div>
+<div class="w"><small>Dati facoltativi, solo per la stampa della scheda</small></div>${inp('cl_denom','Denominazione (strada)')}${inp('cl_ltot','Luce complessiva [m]','text',N)}${inp('cl_ost','Ostacolo scavalcato (es. canale)')}${inp('cl_limt','Limitazione di traffico (testo)')}${inp('cl_tgmp','TGMp (veicoli pesanti/giorno)','text',I)}<div class="w"><label>Progetto originale</label>${yn('cl_prog')}</div>
 ${inp('cl_kel','Convenzione: K2 «elevata» se ≥ (0,5 oppure 1)','text',N)}${inp('cl_nel','Convenzione: n° difetti G≤3 che valgono «numero elevato»','text',I)}
 </div></details>`};
 function cda(){
@@ -298,6 +307,61 @@ function cda(){
  if(R.W.length)h+='<h3>Avvisi</h3>'+li(R.W);
  h+=`<p><small>Calcolo secondo le Linee Guida (DM 204/2022) § 4.2, Tab. 4.3-4.10 e Fig. 4.2-4.3. Il livello di difettosità usa le convenzioni indicate nei dati di classificazione: è una proposta da verificare dal tecnico. Per i dati inseriti a fascia il calcolo usa gli estremi della fascia; se i risultati differiscono la scelta spetta al tecnico.</small></p>`;
  $('m').innerHTML=h}
+/* ===== V_04_00: stampa CdA a pagine (grafica come scheda di esempio) ===== */
+const CC=['#a9d18e','#c6e0b4','#ffe699','#ffc000','#ff8f8f'],LU=['BASSA','MEDIO-BASSA','MEDIA','MEDIO-ALTA','ALTA'],LDU=['BASSO','MEDIO-BASSO','MEDIO','MEDIO-ALTO','ALTO'],RD='#c00000',SCN=['Bassa','Medio-bassa','Media','Medio-alta','Alta'];
+const bx=b=>`<rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="3" fill="${b.on?b.c:'#f2f2f2'}" stroke="${b.on?'#000':'#d0d0d0'}" stroke-width="${b.on?1.6:.8}"/><text x="${b.x+b.w/2}" y="${b.y+b.h/2+4.5}" text-anchor="middle" font-size="${b.z||12}" font-weight="${b.on?700:400}" fill="${b.on?'#000':'#9a9a9a'}">${b.t}</text>`;
+const hd=(x,w,a,b,c)=>`<text x="${x+w/2}" y="12" text-anchor="middle" font-size="11.5" font-weight="700" fill="${c||'#000'}">${a}</text>`+(b?`<text x="${x+w/2}" y="25" text-anchor="middle" font-size="11.5" font-weight="700" fill="${c||'#000'}">${b}</text>`:'');
+const mkF=()=>{const B=[],L=[];return{b:(x,y,w,h,t,c,on,z)=>{const o={x,y,w,h,t,c,on,z};B.push(o);return o},l:(a,b)=>L.push([a,b]),
+ svg:h=>{const g=[],r=[];L.forEach(([a,b])=>{const on=a.on&&b.on,s=`<line x1="${a.x+a.w}" y1="${a.y+a.h/2}" x2="${b.x-2}" y2="${b.y+b.h/2}" stroke="${on?RD:'#bbb'}" stroke-width="${on?2.2:.7}" marker-end="url(#${on?'ar':'ag'})"/>`;(on?r:g).push(s)});
+ return `<svg viewBox="0 0 1000 556" width="100%"><defs><marker id="ag" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0L6,3L0,6z" fill="#bbb"/></marker><marker id="ar" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0L6,3L0,6z" fill="${RD}"/></marker></defs>${h}${g.join('')}${r.join('')}${B.map(bx).join('')}</svg>`}}};
+const by=l=>30+(4-l)*104+50; // centro della fascia del livello l
+function pgV(X){const F=mkF(),P=['≤ 1945','1945-1980','≥ 1980'],c1=[],c2=[],c3=[],c4=[],c5=[],c7=[],ra=(d,r)=>d==4?4:d==0?0:r==2?d+1:(r==0&&d!=3)?d-1:d,na=(a,c)=>a>0&&a<4?a+(c==0?1:c==2?-1:0):a;
+ for(let l=0;l<5;l++){const m=by(l);
+  c1[l]=F.b(10,m-22,110,44,LDU[l],CC[l],X.dl==l);
+  c2[l]=l<4?[0,1,2].map(r=>F.b(160,m-47+r*32,90,26,P[r],'#fff',X.dl==l&&X.r==r)):[F.b(160,m-13,90,26,'Qualsiasi','#fff',X.dl==4)];
+  c3[l]=F.b(290,m-22,110,44,LDU[l],CC[l],X.a1==l);
+  c4[l]=l<4?[0,1,2].map(c=>F.b(440,m-47+c*32,90,26,'Classe '+'ABC'[c],'#fff',X.a1==l&&X.nor=='ABC'[c])):[F.b(440,m-13,90,26,'Qualsiasi','#fff',X.a1==4)];
+  c5[l]=F.b(570,m-22,110,44,LDU[l],CC[l],X.a==l);
+  c7[l]=F.b(885,m-22,105,44,LU[l],CC[l],X.vul==l)}
+ for(let l=0;l<5;l++){const m=by(l);
+  c2[l].forEach((b,r)=>{F.l(c1[l],b);F.l(b,c3[l<4?ra(l,r):4])});
+  c4[l].forEach((b,c)=>{F.l(c3[l],b);F.l(b,c5[l<4?na(l,c):4])});
+  for(let s=4;s>=0;s--){const rw=F.b(720,m-50+(4-s)*20,125,18,SCN[s],'#fff',X.a==l&&X.s0==s,11);F.l(c5[l],rw);F.l(rw,c7[MV[l][s]])}}
+ return F.svg(hd(10,110,'Livello di','difettosità attuale')+hd(160,90,'Rapidità di','evoluzione')+hd(440,90,'Norma di','progettazione')+hd(720,125,'Schema statico,','materiale, luce')+hd(885,105,'Classe di','vulnerabilità',RD))}
+function pgE(X){const F=mkF(),c1=[],c2=[],c3=[],c4=[],c5=[],K=['ALTA','MEDIA','BASSA'],D=[1,0,-1];
+ for(let l=0;l<5;l++){const m=by(l);
+  c1[l]=F.b(30,m-22,150,44,LDU[l],CC[l],X.ep==l);
+  c2[l]=l<4?[0,1].map(r=>F.b(240,m-30+r*32,120,26,r?'Presenza alt.':'Assenza alt.','#fff',X.ep==l&&(r==1)==X.alt)):[F.b(240,m-13,120,26,'Qualsiasi','#fff',X.ep==4)];
+  c3[l]=F.b(420,m-22,150,44,LDU[l],CC[l],X.e1==l);
+  c4[l]=K.map((t,k)=>F.b(630,m-47+k*32,110,26,t,'#fff',X.e1==l&&X.ente=='AMB'[k]));
+  c5[l]=F.b(810,m-22,180,44,LU[l],CC[l],X.es==l)}
+ for(let l=0;l<5;l++){c2[l].forEach((b,r)=>{F.l(c1[l],b);F.l(b,c3[l<4&&r==0?Math.min(l+1,4):l])});c4[l].forEach((b,k)=>{F.l(c3[l],b);F.l(b,c5[c4n(l+D[k])])})}
+ return F.svg(hd(30,150,'Livello di TGM','e luce campata')+hd(240,120,'Alternative','stradali')+hd(630,110,'Tipologia di','ente scavalcato')+hd(810,180,'Classe di','esposizione',RD))}
+const c4n=n=>Math.max(0,Math.min(4,n));
+function pgF(X,cda){const F=mkF(),G=[['Classe di pericolosità',X.pe],['Classe di vulnerabilità',X.vul],['Classe di esposizione',X.es]],T={x:660,y:300,w:0,h:0,on:true};let o='';
+ G.forEach(([t,val],g)=>{const y0=10+g*180;o+=`<text x="20" y="${y0+85}" font-size="16" font-weight="700">${t}</text>`;
+  for(let l=4;l>=0;l--){const b=F.b(260,y0+10+(4-l)*32,190,26,LU[l].replace('-',' - '),CC[l],val==l,13);if(val==l)F.l(b,T)}});
+ for(let l=4;l>=0;l--)F.b(700,190+(4-l)*50,230,36,LU[l].replace('-',' - '),CC[l],cda==l,15);
+ return F.svg(`<rect x="640" y="10" width="350" height="530" fill="#fae3d6"/>`+['Classe di attenzione','rischio strutturale e','fondazionale'].map((t,i)=>`<text x="815" y="${90+i*22}" text-anchor="middle" font-size="17" font-weight="700" fill="${RD}">${t}</text>`).join('')+o)}
+function cdaPrint(){
+ const R=calcCdA();if(R.cda==null){alert(R.pend?'Scegli prima il risultato adottato nella schermata «Classe di attenzione».':'CdA non calcolabile: mancano dei dati.');return}
+ const g=R.ok.find(g=>g.cda===R.cda),r=g.sc[0],X=r.X,v=cur.v,n=E(cur.name),dash=x=>x===undefined||x===null||x===''?'–':E(x);
+ const S1=(r,n)=>r.S.find(s=>s.n==n);
+ const pg=(i,b)=>`<section class="pg"><div class="gb2">CLASSIFICAZIONE sulla base del RISCHIO STRUTTURALE e FONDAZIONALE</div>${b}<div class="pn">${i}</div></section>`,sh=t=>`<div class="sh"><span>${t}</span><b>Ponte ${n}</b></div>`,rw=(l,t)=>`<tr><th>${l}</th><td>${dash(t)}</td></tr>`;
+ const fl=(k,kf,m)=>v[k]!==undefined&&v[k]!==''?v[k]:(v[kf]&&m[v[kf]]?'fascia '+m[v[kf]]:''),yn=k=>({'1':'Sì','0':'No'}[v[k]]),y=X.y,per=y==null?'':(y<=1945?'≤ 1945':y>=1980?'≥ 1980':'1945-1980')+' (anno '+y+')';
+ const sc=[v.cl_t,v.cl_t2].filter(Boolean).join(' / '),mat=[v.cl_m,v.cl_m2].filter(Boolean).join(' / ');
+ const p1=pg(1,`<table class="t1">${rw('Ponte',cur.name)}${rw('Denominazione',v.cl_denom||v.strada)}${rw('Luce complessiva',v.cl_ltot?v.cl_ltot+' m':'')}${rw('N. campate',v.cl_nc)}${rw('Materiale impalcato',mat)}${rw('Schema statico',sc)}${rw('Periodo di costruzione',per)}${rw('Progetto originale',yn('cl_prog'))}${rw('Categoria ponte',{I:'I (ponti destinati al transito di carichi civili e militari)',II:'II (ponti destinati al transito dei soli carichi civili)'}[v.cl_cat])}${rw('Limitazione di traffico',v.cl_limt||(v.cl_str?'Classe '+v.cl_str+' · '+{A:'carichi di progetto NTC',B:'44 t',C:'26 t',D:'8 t',E:'3,5 t'}[v.cl_str]:''))}${rw('Frequenza TGMP/sing. corsia',fl('cl_vc','cl_vc_f',{B:'bassa (≤ 300)',M:'media (300–700)',A:'alta (≥ 700)'}))}${rw('Misure di traffico di riferimento (TGM)',fl('cl_tgm','cl_tgm_f',{B:'bassa (≤ 10.000)',M:'media (10.000–25.000)',A:'alta (≥ 25.000)'}))}${rw('Misure di traffico di riferimento (TGMp)',v.cl_tgmp)}${rw('Trasporto merci pericolose',yn('cl_mp'))}${rw('Presenza di alternative stradali',{P:'Sì',A:'No'}[v.cl_alt])}${rw('Ostacolo',v.cl_ost||{A:'Ente di classe alta',M:'Ente di classe media',B:'Ente di classe bassa'}[v.cl_ente])}</table>`);
+ const CL=[['A','Carichi di progetto previsti dalle Norme Tecniche'],['B','Limitazione di carico a 44 t'],['C','Limitazione di carico a 26 t'],['D','Limitazione di carico a 8,0 t'],['E','Limitazione di carico a 3,5 t']],FQ=['Alta','Media','Bassa'];
+ const tp=CL.map(([c,d])=>{const s=X.str==c,lb=`<td rowspan="${c=='E'?1:3}" class="cl" style="${s?'background:#d9d9d9':''}"><b>Classe ${c}</b><br><i>${d}</i></td>`;
+  if(c=='E')return `<tr>${lb}<td colspan="3" style="${s?'background:'+CC[0]+';font-weight:700':''}">BASSA</td></tr>`;
+  return `<tr>${lb}<td colspan="3"><b>Frequenza passaggi di veicoli commerciali</b></td></tr><tr>${FQ.map((q,i)=>`<td style="${s&&X.f==i?'background:#f2f2f2':''}"><b>${q}</b></td>`).join('')}</tr><tr>${[0,1,2].map(i=>`<td style="${s&&X.f==i?'background:'+CC[X.pe]+';font-weight:700':''}">${LU[T43[c][i]]}</td>`).join('')}</tr>`}).join('');
+ const p2=pg(2,sh('Pericolosità')+`<table class="t2"><tr><th colspan="4" style="color:${RD}">CLASSE DI PERICOLOSITÀ</th></tr>${tp}</table><small>Classe stradale in funzione della massima massa ammissibile (Tab. 4.2) e frequenza dei veicoli commerciali per singola corsia (Tab. 4.4): ${E((S1(r,'Pericolosità')||{}).det||'')}.</small>`);
+ const p3=pg(3,sh('Vulnerabilità')+pgV(X)+`<small>Livello di difettosità: ${E((S1(r,'Livello di difettosità')||{}).det||'')}. Schema statico, materiale, luce: ${E((S1(r,'Schema statico, materiale, luce')||{}).det||'')}. ${X.dl==4?'Difettosità ALTO: vulnerabilità ALTA a prescindere dagli altri fattori.':''}</small>`);
+ const p4=pg(4,sh('Esposizione')+pgE(X)+`<small>${E((S1(r,'Esposizione')||{}).det||'')}.</small>`);
+ const hy=r.hyp.length?'Ipotesi adottata: '+r.hyp.join(', ')+'. ':'',wn=R.W.length?'Avvisi: '+R.W.map(E).join(' · '):'';
+ const p5=pg(5,sh('Classe di attenzione')+pgF(X,R.cda)+`<small>${E(hy)}${wn}</small>`);
+ $('pr').innerHTML=p1+p2+p3+p4+p5;document.body.classList.add('pp');setTimeout(()=>print(),60)}
+addEventListener('afterprint',()=>document.body.classList.remove('pp'));
 /* ===== Foto dei difetti: archivio separato (IndexedDB 'f'), numerazione progressiva per ponte ===== */
 const FMAX=1600; // lato massimo in px delle foto salvate
 const phb=(k,d,c)=>{const a=`data-ph="${k}" data-d="${E(d)}" data-c="${E(c||'')}"`;return `<div class="ph"><button type="button" class="c" onclick="this.parentNode.children[2].click()">📷 Scatta</button><button type="button" class="c" onclick="this.parentNode.children[3].click()">Galleria</button><input type="file" accept="image/*" capture="environment" hidden ${a}><input type="file" accept="image/*" hidden ${a}></div><div class="th" data-th="${k}"></div>`};
